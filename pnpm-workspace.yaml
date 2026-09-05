@@ -1,0 +1,34 @@
+# nodeLinker: hoisted —— 讓 pnpm 改用 npm / yarn 那樣「平鋪」的 node_modules。
+#
+# 為什麼在這裡（2026-09-05 Ch13 實測，別隨手拿掉）：
+# pnpm 預設把套件放進 .pnpm 再用 symlink 連過去（嚴格佈局），而 Nuxt 4.5.2
+# 底下的 vite 用了 `#module-sync-enabled` 這種 subpath imports —— 在那個佈局下
+# Node 解析不到它自己的 package.json，於是 `nuxt prepare` 直接失敗：
+#
+#   Loading `@nuxt/nitro-server` server builder failed.
+#     [cause]: Named export 'attachScopes' not found.
+#              '@rollup/pluginutils' is a CommonJS module...
+#   Package import specifier "#module-sync-enabled" is not defined
+#
+# 症狀會騙人：它發生在 `pnpm install` 的 postinstall 階段，看起來像「pnpm 壞了」
+# 或「套件版本不對」。實測排除過的假設：升降 nuxt 版本（4.2.1 / 4.5.2 都一樣）、
+# 顯式安裝 @nuxt/nitro-server、把 @rollup/pluginutils 釘到 5.3.0、
+# 把 vite 釘到 7.2.2 —— 全部無效。**唯一有效的是換 linker。**
+# 連比較溫和的 shamefullyHoist: true 都不夠（root 確實被拉平了，還是失敗）。
+#
+# 為什麼 yarn 專案不會遇到：yarn 天生就是平鋪。
+# 這也是「Nuxt + pnpm 撞到解析問題就加 hoist 設定」這條老路 ——
+# Nuxt 3 早期官方文件就寫過同樣的建議（當時是 shamefully-hoist=true）。
+#
+# 代價：失去 pnpm 的幽靈依賴防護 —— 沒寫進 package.json 的套件也 import 得到。
+# 後端 (survey-backend) 維持 pnpm 預設的嚴格佈局，只有這個 repo 放寬。
+#
+# 什麼時候可以拿掉：這是 nuxt 4.5.2 這一代的上游問題，修掉之後就不需要了。
+# 驗證方法 —— 把這一行註解掉，然後：
+#   rm -rf node_modules .nuxt && pnpm install
+# 能跑完 `Types generated in .nuxt` 就代表上游修好了，可以刪掉。
+nodeLinker: hoisted
+
+# esbuild 需要跑 postinstall 腳本（下載對應平台的 binary），pnpm 預設會擋。
+allowBuilds:
+  esbuild: true
