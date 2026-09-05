@@ -29,6 +29,12 @@
 # 能跑完 `Types generated in .nuxt` 就代表上游修好了，可以刪掉。
 nodeLinker: hoisted
 
-# esbuild 需要跑 postinstall 腳本（下載對應平台的 binary），pnpm 預設會擋。
+# 這兩個需要跑 postinstall 腳本（下載或編譯對應平台的 binary），pnpm 預設會擋。
+#
+# ⚠️ 被擋的後果不只是「少一個功能」：pnpm 會認為安裝沒完成，於是
+# **每一個 pnpm <script> 在跑之前的 deps 檢查都會失敗**（ERR_PNPM_IGNORED_BUILDS），
+# 連 pnpm typecheck 都跑不起來。Ch14 輪 ③ 裝 Vuetify 時實際踩到 ——
+# 而 pnpm 只會自己補一行 `set this to true or false` 的佔位符，不會幫你決定。
 allowBuilds:
+  '@parcel/watcher': true
   esbuild: true
