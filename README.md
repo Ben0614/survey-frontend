@@ -26,7 +26,7 @@ pnpm typecheck                             # 契約檢查
 pnpm dev                                   # 開發（Ch14 才會有頁面）
 ```
 
-⚠️ `pnpm typecheck` 目前**刻意紅一條**，理由見 `CLAUDE.md` 的「現況」。
+✅ `pnpm typecheck` 目前是綠的。紅了代表後端契約變了 —— 先跑 `pnpm gen:api` 重產型別。
 
 ⚠️ `pnpm-workspace.yaml` 的 `nodeLinker: hoisted` **不能拿掉** ——
 少了它 `pnpm install` 會在 postinstall 失敗。原因寫在那個檔案的註解裡。

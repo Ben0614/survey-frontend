@@ -73,17 +73,10 @@ app/middleware/auth.global.ts   全域路由守衛，publicPages 白名單
 ## 現況
 
 - Ch13 只做到「產型別 + 型別檢查」，**還沒有任何頁面、也還沒發過真的請求**。
-- ⚠️ **`pnpm typecheck` 現在刻意是紅的，而且只該紅一條** —— 那不是壞掉：
-
-  ```
-  app/model/api/contract-check.ts(40,7): error TS2322:
-    Type 'string' is not assignable to type 'Record<string, never>'.
-  ```
-
-  後端 `SurveyEntity.ownerId` 只標了 `nullable` 沒標 `type`，產出
-  `Record<string, never> | null`。修法與待辦在
-  `../survey-backend/LEARNING.md` 的「Ch13 接續點」。
-  **後端修完要回來 `pnpm gen:api` 重產型別，這條才會轉綠。**
-  紅超過一條 = 契約真的有別的地方變了，要查。
-- ⚠️ **後端還沒設定 CORS**（Ch14 的主題）。第一個真請求會被瀏覽器擋下，
+- ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
+  刻意紅著一條（`ownerId` 產出 `Record<string, never>`），後端補上 `type: String`
+  之後轉綠。**紅了就是契約真的變了，要查，不是「本來就紅」。**
+- **重產型別的時機：後端只要改了 entity / DTO / `@Api...` 就要重跑 `pnpm gen:api`。**
+  改回應形狀就是改契約 —— `schema.d.ts` 的 diff 是唯一看得見那件事的地方。
+- ⚠️ **後端還沒設定 CORS**（Ch14 的第一件事）。第一個真請求會被瀏覽器擋下，
   症狀是 Console 一片紅 `Failed to fetch`，但用 `curl` 打完全正常 —— 那不是後端壞了。

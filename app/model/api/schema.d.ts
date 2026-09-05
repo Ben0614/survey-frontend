@@ -218,6 +218,30 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ErrorBodyEntity: {
+            /**
+             * @description 錯誤代碼，前端用它分支處理（不要解析 message）
+             * @example NOT_FOUND
+             * @enum {string}
+             */
+            code: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INTERNAL_ERROR";
+            /**
+             * @description 給人看的錯誤訊息，內容可能隨版本變動
+             * @example 問卷不存在
+             */
+            message: string;
+            /**
+             * @description 驗證失敗時每條規則的訊息，只有 400 VALIDATION_FAILED 會有
+             * @example [
+             *       "title should not be empty"
+             *     ]
+             */
+            details?: string[];
+        };
+        ErrorResponseEntity: {
+            /** @description 錯誤內容 */
+            error: components["schemas"]["ErrorBodyEntity"];
+        };
         QuestionEntity: {
             /**
              * @description 題目 id（cuid）
@@ -304,30 +328,6 @@ export interface components {
             data: components["schemas"]["SurveyEntity"][];
             /** @description 統計資訊 */
             meta: components["schemas"]["PaginationMetaEntity"];
-        };
-        ErrorBodyEntity: {
-            /**
-             * @description 錯誤代碼，前端用它分支處理（不要解析 message）
-             * @example NOT_FOUND
-             * @enum {string}
-             */
-            code: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INTERNAL_ERROR";
-            /**
-             * @description 給人看的錯誤訊息，內容可能隨版本變動
-             * @example 問卷不存在
-             */
-            message: string;
-            /**
-             * @description 驗證失敗時每條規則的訊息，只有 400 VALIDATION_FAILED 會有
-             * @example [
-             *       "title should not be empty"
-             *     ]
-             */
-            details?: string[];
-        };
-        ErrorResponseEntity: {
-            /** @description 錯誤內容 */
-            error: components["schemas"]["ErrorBodyEntity"];
         };
         CreateSurveyDto: {
             /**
@@ -565,6 +565,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
         };
     };
     SurveysController_create: {
@@ -591,6 +600,15 @@ export interface operations {
             };
             /** @description 參數錯誤 */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -632,6 +650,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
             /** @description 問卷不存在 */
             404: {
                 headers: {
@@ -661,6 +688,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
             /** @description 無此權限 */
@@ -716,6 +752,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
             /** @description 無此權限 */
             403: {
                 headers: {
@@ -756,6 +801,15 @@ export interface operations {
                     "application/json": components["schemas"]["SurveyEntity"];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
             /** @description 無此權限 */
             403: {
                 headers: {
@@ -794,6 +848,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
             /** @description 無此權限 */
@@ -845,6 +908,15 @@ export interface operations {
                     "application/json": components["schemas"]["QuestionEntity"][];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
             /** @description 問卷不存在 */
             404: {
                 headers: {
@@ -882,6 +954,15 @@ export interface operations {
             };
             /** @description 參數錯誤 */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -936,6 +1017,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuestionEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
             /** @description 無此權限 */
@@ -1000,6 +1090,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
             /** @description 無此權限 */
             403: {
                 headers: {
@@ -1047,6 +1146,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResponseDetailEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
             /** @description 無此權限 */
@@ -1103,6 +1211,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
             /** @description 無此權限 */
             403: {
                 headers: {
@@ -1149,6 +1266,15 @@ export interface operations {
             };
             /** @description 請求內容不合法：欄位驗證失敗、題目 ID 重複、或題目不屬於這份問卷 */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
