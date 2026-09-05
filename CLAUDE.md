@@ -47,11 +47,18 @@ pnpm typecheck                           # 綠 = 契約可用
 
 ```
 app/api/*.ts                    逐 domain 的薄封裝（一個檔案一個資源）
-app/composables/useMyService.ts 統一的 HTTP 封裝
+app/composables/useMyService.ts 統一的 HTTP 封裝，唯一碰 $fetch 的地方
 app/model/api/schema.d.ts       ← 產的，不手寫
-app/utils/auth.ts               token 存 cookie（useCookie）
+app/stores/auth.ts              token（cookie）與 user（記憶體）；**唯一持有 token ref 的地方**
+app/stores/notification.ts      錯誤 toast 的唯一出口
+app/utils/auth.ts               useTokenCookie —— 只給 stores/auth.ts 用（理由見該檔頭）
 app/middleware/auth.global.ts   全域路由守衛，publicPages 白名單
+app/plugins/vuetify.ts          createVuetify
+app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $fetch
 ```
+
+⚠️ **`app/api/` 不在 Nuxt 的 auto-import 預設目錄裡**，靠 `nuxt.config.ts` 的
+`imports.dirs: ['api']` 才有效。少了那行，`authApi` 會是 `undefined` —— 而且是執行期才炸。
 
 **分層的完整說明在 [`docs/前端分層慣例.md`](docs/前端分層慣例.md)** —— 寫 `useMyService`、
 `api/*.ts`、路由守衛或接 Vuetify 之前先讀它。
@@ -72,11 +79,18 @@ app/middleware/auth.global.ts   全域路由守衛，publicPages 白名單
 
 ## 現況
 
-- Ch13 只做到「產型別 + 型別檢查」，**還沒有任何頁面、也還沒發過真的請求**。
+- **Ch14 完成：能註冊、登入、reload 之後靠 `/auth/me` 還原身分、登出。**
+  已有 Vuetify + Pinia + `useMyService` + 全域路由守衛。
+  `/surveys` 目前是**佔位頁**（只顯示身分與登出），Ch15 換成真的列表。
 - ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
   刻意紅著一條（`ownerId` 產出 `Record<string, never>`），後端補上 `type: String`
   之後轉綠。**紅了就是契約真的變了，要查，不是「本來就紅」。**
 - **重產型別的時機：後端只要改了 entity / DTO / `@Api...` 就要重跑 `pnpm gen:api`。**
   改回應形狀就是改契約 —— `schema.d.ts` 的 diff 是唯一看得見那件事的地方。
-- ⚠️ **後端還沒設定 CORS**（Ch14 的第一件事）。第一個真請求會被瀏覽器擋下，
-  症狀是 Console 一片紅 `Failed to fetch`，但用 `curl` 打完全正常 —— 那不是後端壞了。
+- ✅ **後端的 CORS 設好了**（Ch14 輪 ①，白名單 `http://localhost:3000`，不開 credentials）。
+  但那句症狀值得記住，它是這一類問題的通用長相：
+  **Console 一片紅 `Failed to fetch`，而 `curl` 打完全正常** —— 那不是後端壞了。
+  CORS 是**瀏覽器擋下回應**，請求其實已經進到後端、也執行了。
+- ⚠️ **`pnpm-workspace.yaml` 的 `allowBuilds` 少一個套件，連 `pnpm typecheck` 都跑不起來。**
+  build script 被擋時 pnpm 認為安裝沒完成，每個 script 之前的 deps 檢查都會失敗
+  （`ERR_PNPM_IGNORED_BUILDS`）。它只會自己補一行 `set this to true or false` 的佔位符。

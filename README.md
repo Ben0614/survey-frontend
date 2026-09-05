@@ -23,7 +23,7 @@ pnpm install                               # postinstall 會跑 nuxt prepare
 cd ../survey-backend && pnpm start:dev     # 產型別前後端要先起來
 pnpm gen:api                               # 從 /docs-json 產 app/model/api/schema.d.ts
 pnpm typecheck                             # 契約檢查
-pnpm dev                                   # 開發（Ch14 才會有頁面）
+pnpm dev                                   # 開發（http://localhost:3000）
 ```
 
 ✅ `pnpm typecheck` 目前是綠的。紅了代表後端契約變了 —— 先跑 `pnpm gen:api` 重產型別。
