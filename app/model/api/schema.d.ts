@@ -240,10 +240,7 @@ export interface components {
              * @enum {string}
              */
             type: "TEXT" | "SINGLE_CHOICE";
-            /**
-             * @description 題號
-             * @default 0
-             */
+            /** @description 題號 */
             order: number;
             /** @description 選項 */
             options: string[];
@@ -278,7 +275,7 @@ export interface components {
             /** @description 題目清單，只有 ?includeQuestions=true 時才會出現 */
             questions?: components["schemas"]["QuestionEntity"][];
             /** @description 建立者的 User id，尚未有值時為 null */
-            ownerId: Record<string, never> | null;
+            ownerId: string | null;
         };
         PaginationMetaEntity: {
             /**
