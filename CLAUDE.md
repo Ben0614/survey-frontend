@@ -88,7 +88,11 @@ app/pages/                      頁面，只組合上面這些，不直接碰 $f
 ## 串接時一定會撞到的四件事
 
 1. **token 一小時過期且不會自動延長**，沒有 refresh token —— 過期就重新登入。
-2. **401 是唯一有通用處置的狀態碼**：清掉 token、導去登入頁。
+2. **401 是唯一有通用處置的狀態碼**：清掉 token、導去登入頁 ——
+   ⚠️ **但那只適用於「帶票去要資源」的請求。** `/auth/login` 是「去換一張票」，
+   它的 401 意思是「帳密不對」，所以那兩支端點要帶 `anonymous: true`
+   （見 `useMyService` 的 `RequestOption`）。少了它的症狀是
+   **沒登入過的人被告知「登入逾時，請重新登入」**（Ch18 上線第一天就撞到）。
 3. **403 有兩種來源**（角色不足／不是你的資源）但對外一樣，顯示「權限不足」即可，不要試圖分辨。
 4. **`GET /auth/me` 是還原身分的唯一入口** —— `login` 只回 `{ accessToken }`，
    reload 之後要靠它拿回 `id / email / role`。
@@ -108,9 +112,26 @@ app/pages/                      頁面，只組合上面這些，不直接碰 $f
   只答一題也能送出、單選答案不必是選項之一、沒有統計端點。
   完整記錄在後端的 [`ch17`](../survey-backend/docs/chapters/ch17-五個功能頁面.md)。
   ⚠️ **每一輪都要重跑 `pnpm gen:api`**，後端六個交付有五個動了契約。
-- **下一章 Ch18：前端部署與端到端驗收。**
-  ⚠️ 部署之後**要把後端線上的 `CORS_ORIGIN` 換成正式的前端網址** ——
-  現在那裡還是 `http://localhost:3000`。沒換的症狀見下面 CORS 那一條。
+- ✅ **Ch18 完成：上線了。**
+
+  ```
+  前端  https://survey-frontend-1eep.vercel.app    Vercel
+  後端  https://survey-backend-0dku.onrender.com   Render
+  ```
+
+  Vercel 只要連 GitHub，Framework Preset 會自動認出 Nuxt，三個指令都不用改。
+  **唯一要設的是 `NUXT_PUBLIC_API_BASE`**（Production + Preview 都勾，結尾不要斜線），
+  而且**一定要驗**——拼錯不會有任何錯誤，Nuxt 只是安靜退回 `localhost:3100`：
+
+  ```bash
+  curl -s https://survey-frontend-1eep.vercel.app/login | grep -oE 'apiBase[^,}]{0,80}'
+  ```
+
+  `git push` 到 `main` 會自動部署，實測約 40 秒換版。
+  ⚠️ **Vercel 的 preview 部署會被後端的 CORS 擋掉**（網址每次不同，白名單是精確比對）。
+  Ch18 決定不處理 —— 目前沒有 PR 流程，用不到。
+
+  完整記錄見後端的 [`ch18`](../survey-backend/docs/chapters/ch18-前端部署與端到端驗收.md)。
 - ⚠️ **填答是匿名的**（後端沒有 `Response.userId`），所以做不到「你已經填過了」，
   也擋不住同一個人送一百次。那是 schema 變更，記在後端的 `LEARNING.md`。
 - ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
