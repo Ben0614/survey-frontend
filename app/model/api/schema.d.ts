@@ -449,11 +449,15 @@ export interface components {
         };
         RegisterDto: {
             /**
+             * Format: email
              * @description 電子信箱
              * @example someone@example.com
              */
             email: string;
-            /** @description 密碼 */
+            /**
+             * Format: password
+             * @description 密碼（bcrypt 的硬上限是 72 字元）
+             */
             password: string;
         };
         UserEntity: {
@@ -485,6 +489,7 @@ export interface components {
         };
         LoginDto: {
             /**
+             * Format: email
              * @description 電子信箱
              * @example someone@example.com
              */
