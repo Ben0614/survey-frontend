@@ -56,13 +56,25 @@ app/utils/auth.ts               useTokenCookie —— 只給 stores/auth.ts 用�
 app/utils/questions.ts          DraftQuestion 與它的三個轉換（新增頁與編輯頁共用）
 app/utils/field-errors.ts       後端的 fields → 標在輸入框上的訊息
 app/middleware/auth.global.ts   全域路由守衛，publicPages 白名單
-app/plugins/vuetify.ts          createVuetify
-app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $fetch
+app/plugins/vuetify.ts          createVuetify（**ssr: true 不能省**，見下）
+app/pages/                      頁面，只組合上面這些，不直接碰 $fetch
+  login.vue
+  surveys/index.vue             列表（四個分頁籤 + 搜尋 + 分頁）
+  surveys/new.vue
+  surveys/[id]/edit.vue         整份取代題目；已發布時題目區唯讀
+  surveys/[id]/fill.vue         整份必答；單選用 v-radio-group
+  surveys/[id]/result.vue       摘要（不分頁）+ 個別回應（分頁）
 .env.example                    要建哪些環境變數（Ch16）；.env 不進版控
 ```
 
 ⚠️ **`app/api/` 不在 Nuxt 的 auto-import 預設目錄裡**，靠 `nuxt.config.ts` 的
 `imports.dirs: ['api']` 才有效。少了那行，`authApi` 會是 `undefined` —— 而且是執行期才炸。
+
+⚠️ **`createVuetify()` 少了 `ssr: true` 的症狀只在 console 裡。** v-tabs / v-slide-group
+這類元件會問「現在是不是手機寬度」，而伺服器端沒有 `window` 可以量 —— 於是 server 產出
+`v-slide-group--mobile`、client 算出沒有，Vue 報 hydration mismatch 並把那一整塊重畫。
+**畫面完全正常**，所以瀏覽器驗收時要順手看一眼 console（Ch17 輪 ③ 就是這樣發現的，
+而它其實是輪 ① 的 v-tabs 帶進來的）。
 
 **分層的完整說明在 [`docs/前端分層慣例.md`](docs/前端分層慣例.md)** —— 寫 `useMyService`、
 `api/*.ts`、路由守衛或接 Vuetify 之前先讀它。
@@ -87,12 +99,18 @@ app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $f
 
 - **Ch14 完成：能註冊、登入、reload 之後靠 `/auth/me` 還原身分、登出。**
   已有 Vuetify + Pinia + `useMyService` + 全域路由守衛。
-- **Ch17 進行中（一頁一輪）：`/surveys` 列表 ✅、`/surveys/new` ✅、
-  `/surveys/:id/edit` ✅、`/surveys/:id/fill` ✅、`/surveys/:id/result` ⬜。**
-  這一章的重點不在頁面，在**做這一頁時發現 API 哪裡不好用** —— 四輪各修掉了
-  後端的 N+1、建立不是原子的、編輯不是原子的、`order` 改不了、空問卷可以發布、
-  只答一題也能送出、單選答案不必是選項之一。
-  ⚠️ **每一輪都要重跑 `pnpm gen:api`**，後端幾乎每一輪都動了契約。
+- ✅ **Ch17 完成：五個頁面全部做完。**
+  `/surveys`（列表）、`/surveys/new`、`/surveys/:id/edit`、`/surveys/:id/fill`、
+  `/surveys/:id/result`（摘要 + 個別回應兩個分頁）。
+  這一章的重點不在頁面，在**做這一頁時發現 API 哪裡不好用** —— 六個交付
+  **沒有一個是 bug 修正**，後端全部照規格運作，只是沒有人能拿它做出一個畫面：
+  兩個 N+1、建立與編輯都不是原子的、`order` 完全改不了、空問卷可以發布、
+  只答一題也能送出、單選答案不必是選項之一、沒有統計端點。
+  完整記錄在後端的 [`ch17`](../survey-backend/docs/chapters/ch17-五個功能頁面.md)。
+  ⚠️ **每一輪都要重跑 `pnpm gen:api`**，後端六個交付有五個動了契約。
+- **下一章 Ch18：前端部署與端到端驗收。**
+  ⚠️ 部署之後**要把後端線上的 `CORS_ORIGIN` 換成正式的前端網址** ——
+  現在那裡還是 `http://localhost:3000`。沒換的症狀見下面 CORS 那一條。
 - ⚠️ **填答是匿名的**（後端沒有 `Response.userId`），所以做不到「你已經填過了」，
   也擋不住同一個人送一百次。那是 schema 變更，記在後端的 `LEARNING.md`。
 - ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
