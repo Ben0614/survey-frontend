@@ -214,8 +214,8 @@ async function logout() {
           />
           <v-spacer />
           <!--
-            只剩「結果」的目標頁面還不存在（輪 ⑤），仍然 disabled。
-            新增問卷（輪 ②）、編輯（輪 ③）、填寫（輪 ④）—— 每一輪拿掉一個。
+            四個按鈕的目標頁面都接上了：新增問卷（輪 ②）、編輯（輪 ③）、
+            填寫（輪 ④）、結果（輪 ⑤a）。這一排從 Ch17 開工時全部 disabled 開始。
           -->
           <v-btn color="primary" to="/surveys/new" prepend-icon="mdi-plus">
             新增問卷
@@ -268,7 +268,13 @@ async function logout() {
               >
                 編輯
               </v-btn>
-              <v-btn v-if="isMine(s)" size="small" variant="text" disabled>
+              <!-- 輪 ⑤a 接上。結果只有擁有者與 ADMIN 看得到（後端 403）。 -->
+              <v-btn
+                v-if="isMine(s)"
+                size="small"
+                variant="text"
+                :to="`/surveys/${s.id}/result`"
+              >
                 結果
               </v-btn>
               <!--

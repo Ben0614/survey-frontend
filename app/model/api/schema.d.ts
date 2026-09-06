@@ -164,6 +164,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/surveys/{surveyId}/responses/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查詢填答摘要（每題的分佈，不分頁） */
+        get: operations["SurveyResponsesController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -504,6 +521,64 @@ export interface components {
             data: components["schemas"]["ResponseEntity"][];
             /** @description 統計資訊 */
             meta: components["schemas"]["PaginationMetaEntity"];
+        };
+        OptionSummaryEntity: {
+            /**
+             * @description 選項的文字
+             * @example 滿意
+             */
+            option: string;
+            /**
+             * @description 這個選項被選了幾次
+             * @example 18
+             */
+            count: number;
+        };
+        QuestionSummaryEntity: {
+            /**
+             * @description 題目 id（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            questionId: string;
+            /**
+             * @description 題目
+             * @example 整體滿意度
+             */
+            title: string;
+            /**
+             * @description 題目類型
+             * @example SINGLE_CHOICE
+             * @enum {string}
+             */
+            type: "TEXT" | "SINGLE_CHOICE";
+            /**
+             * @description 這題排第幾（從 0 開始）
+             * @example 0
+             */
+            order: number;
+            /**
+             * @description 這一題實際收到幾筆答案
+             * @example 27
+             */
+            answerCount: number;
+            /** @description 每個選項各拿到幾票，**只有 SINGLE_CHOICE 才有**。以題目的 options 為基準，所以沒有人選的選項也會出現（count 是 0） */
+            options?: components["schemas"]["OptionSummaryEntity"][];
+            /** @description 最近幾筆回答的原文，**只有 TEXT 才有**，最新的排在前面。這是抽樣不是全部 —— 要看全部請用 GET /surveys/:surveyId/responses */
+            samples?: string[];
+        };
+        SurveySummaryEntity: {
+            /**
+             * @description 問卷 id（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            surveyId: string;
+            /**
+             * @description 這份問卷總共有幾份填答
+             * @example 30
+             */
+            responseCount: number;
+            /** @description 每一題的摘要，依 order 由小到大 */
+            questions: components["schemas"]["QuestionSummaryEntity"][];
         };
         RegisterDto: {
             /**
@@ -1447,6 +1522,55 @@ export interface operations {
             };
             /** @description 問卷未發布 */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+        };
+    };
+    SurveyResponsesController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                surveyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 每一題的統計，依 order 由小到大 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveySummaryEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 無此權限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 問卷不存在 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

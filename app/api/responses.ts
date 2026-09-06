@@ -8,6 +8,17 @@ export type Answer = components['schemas']['AnswerDto']
 
 export type CreateResponseBody = components['schemas']['CreateResponseDto']
 
+/**
+ * 一份問卷的填答摘要（後端 Ch17 輪 ⑤a 新增的端點）。
+ *
+ * **這一支刻意不分頁** —— 那是這一章對「分頁參數好不好用」的回答：
+ * 分頁是為了「不給你全部」而設計的，統計卻需要全部，兩者是相反的需求。
+ * 不分頁不代表把全部資料搬回來：後端用 GROUP BY 算完才回，
+ * 回傳量只跟「有幾題、幾個選項」有關，跟填答數無關。
+ */
+export type SurveySummary = components['schemas']['SurveySummaryEntity']
+export type QuestionSummary = components['schemas']['QuestionSummaryEntity']
+
 export const responsesApi = {
   /**
    * 送出填寫。
@@ -22,4 +33,14 @@ export const responsesApi = {
    */
   submit: (surveyId: string, answers: Answer[]) =>
     useMyService.post<Response>(`/surveys/${surveyId}/responses`, { answers }),
+
+  /**
+   * 填答摘要。**只有問卷的擁有者與 ADMIN 看得到**（別人的已發布問卷是 403）。
+   *
+   * 後端只回原始數字、**不回百分比** —— 四捨五入之後加總不等於 100% 是常見的事，
+   * 而那是「怎麼呈現」的問題。分母要用**每一題自己的 `answerCount`**，
+   * 不是 `responseCount`：Ch17 輪 ④ 之前存進去的填答可以只答一題，兩者會不一樣。
+   */
+  summary: (surveyId: string) =>
+    useMyService.get<SurveySummary>(`/surveys/${surveyId}/responses/summary`),
 }
