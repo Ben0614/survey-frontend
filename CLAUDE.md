@@ -55,6 +55,7 @@ app/utils/auth.ts               useTokenCookie —— 只給 stores/auth.ts 用�
 app/middleware/auth.global.ts   全域路由守衛，publicPages 白名單
 app/plugins/vuetify.ts          createVuetify
 app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $fetch
+.env.example                    要建哪些環境變數（Ch16）；.env 不進版控
 ```
 
 ⚠️ **`app/api/` 不在 Nuxt 的 auto-import 預設目錄裡**，靠 `nuxt.config.ts` 的
@@ -83,13 +84,24 @@ app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $f
 
 - **Ch14 完成：能註冊、登入、reload 之後靠 `/auth/me` 還原身分、登出。**
   已有 Vuetify + Pinia + `useMyService` + 全域路由守衛。
-  `/surveys` 目前是**佔位頁**（只顯示身分與登出），Ch15 換成真的列表。
+  `/surveys` 目前是**佔位頁**（只顯示身分與登出），**Ch17 才換成真的列表**
+  （Ch15 做的是後端的 API 設計問題，沒有動到頁面）。
 - ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
   刻意紅著一條（`ownerId` 產出 `Record<string, never>`），後端補上 `type: String`
   之後轉綠。**紅了就是契約真的變了，要查，不是「本來就紅」。**
+- ✅ **Ch16 完成：`NUXT_PUBLIC_API_BASE` 接上、第一次 `pnpm build` 通過。**
+  後端位址從 `.env` 來（`.env.example` 有完整說明），**一行程式碼都沒改** ——
+  `runtimeConfig` 在 Ch14 就備好了。三件實測出來、憑印象一定會猜錯的事：
+  - **變數名拼錯完全無聲**（Nuxt 不警告，只是退回 `nuxt.config.ts` 的預設值）
+  - **`runtimeConfig` 是執行期讀的**，同一份 `.output` 可以餵不同的值
+  - **`node .output/server/index.mjs` 不讀 `.env`**（`pnpm preview` 才讀）——
+    部署平台跑的是前者，所以上線的值一定要設成平台上的真環境變數
+  細節與驗法見 [`docs/前端分層慣例.md`](docs/前端分層慣例.md) §6。
 - **重產型別的時機：後端只要改了 entity / DTO / `@Api...` 就要重跑 `pnpm gen:api`。**
   改回應形狀就是改契約 —— `schema.d.ts` 的 diff 是唯一看得見那件事的地方。
-- ✅ **後端的 CORS 設好了**（Ch14 輪 ①，白名單 `http://localhost:3000`，不開 credentials）。
+- ✅ **後端的 CORS 設好了**（Ch14 輪 ① 建立，Ch16 改成從環境變數 `CORS_ORIGIN` 來，不開 credentials）。
+  本機的白名單含 `http://localhost:3000` —— **preflight 已用真的瀏覽器驗過**（見 `docs/前端分層慣例.md` §6）。
+  ⚠️ 後端拿不到 `CORS_ORIGIN` 會**啟動失敗**（刻意的）。前端連不上而後端 3100 沒回應時，先去看後端的終端機。
   但那句症狀值得記住，它是這一類問題的通用長相：
   **Console 一片紅 `Failed to fetch`，而 `curl` 打完全正常** —— 那不是後端壞了。
   CORS 是**瀏覽器擋下回應**，請求其實已經進到後端、也執行了。
