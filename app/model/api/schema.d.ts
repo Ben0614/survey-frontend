@@ -276,6 +276,76 @@ export interface components {
             /** @description 選項 */
             options: string[];
         };
+        SurveyListItemEntity: {
+            /**
+             * @description 問卷 id（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            id: string;
+            /**
+             * @description 問卷標題
+             * @example 員工滿意度調查
+             */
+            title: string;
+            /**
+             * @description 問卷狀態
+             * @example DRAFT
+             * @enum {string}
+             */
+            status: "DRAFT" | "PUBLISHED";
+            /**
+             * Format: date-time
+             * @description 建立時間
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description 最後更新時間
+             */
+            updatedAt: string;
+            /** @description 題目清單，只有 ?includeQuestions=true 時才會出現 */
+            questions?: components["schemas"]["QuestionEntity"][];
+            /** @description 建立者的 User id，尚未有值時為 null */
+            ownerId: string | null;
+            /**
+             * @description 這份問卷有幾題
+             * @example 5
+             */
+            questionCount: number;
+            /**
+             * @description 這份問卷被填寫多少次
+             * @example 10
+             */
+            responseCount: number;
+        };
+        PaginationMetaEntity: {
+            /**
+             * @description 目前第幾頁（從 1 開始）
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description 每頁筆數
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description 符合條件的總筆數（不是這一頁的筆數）
+             * @example 42
+             */
+            total: number;
+            /**
+             * @description 總頁數
+             * @example 5
+             */
+            totalPages: number;
+        };
+        PaginatedSurveysEntity: {
+            /** @description 回傳資料 */
+            data: components["schemas"]["SurveyListItemEntity"][];
+            /** @description 統計資訊 */
+            meta: components["schemas"]["PaginationMetaEntity"];
+        };
         SurveyEntity: {
             /**
              * @description 問卷 id（cuid）
@@ -307,34 +377,6 @@ export interface components {
             questions?: components["schemas"]["QuestionEntity"][];
             /** @description 建立者的 User id，尚未有值時為 null */
             ownerId: string | null;
-        };
-        PaginationMetaEntity: {
-            /**
-             * @description 目前第幾頁（從 1 開始）
-             * @example 1
-             */
-            page: number;
-            /**
-             * @description 每頁筆數
-             * @example 10
-             */
-            pageSize: number;
-            /**
-             * @description 符合條件的總筆數（不是這一頁的筆數）
-             * @example 42
-             */
-            total: number;
-            /**
-             * @description 總頁數
-             * @example 5
-             */
-            totalPages: number;
-        };
-        PaginatedSurveysEntity: {
-            /** @description 回傳資料 */
-            data: components["schemas"]["SurveyEntity"][];
-            /** @description 統計資訊 */
-            meta: components["schemas"]["PaginationMetaEntity"];
         };
         CreateSurveyDto: {
             /**
