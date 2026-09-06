@@ -20,6 +20,8 @@ export type UserEntity = components['schemas']['UserEntity']
  *
  * 少了 anonymous 的症狀實際發生過（2026-09-06 上線驗收時使用者回報）：
  * 未註冊的帳號登入 → 跳「登入逾時，請重新登入」。
+ * （另一個「已登入者打錯密碼會被登出」的推論**不成立** —— 路由守衛擋住了那條路，
+ *   完整說明見 useMyService 的 RequestOption.anonymous。）
  */
 const AUTH_ENDPOINT: RequestOption = { anonymous: true, silent: true }
 
