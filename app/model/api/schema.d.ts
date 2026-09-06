@@ -540,6 +540,8 @@ export interface operations {
                 status?: "DRAFT" | "PUBLISHED";
                 /** @description 搜尋條件 */
                 q?: string;
+                /** @description 我建立的問卷 */
+                mine?: boolean;
             };
             header?: never;
             path?: never;
