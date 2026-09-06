@@ -9,16 +9,31 @@
  * 而這個後端（Ch6 定的）完全相反：
  *
  *   成敗       真實 HTTP 狀態碼（400/401/403/404/409/500）
- *   錯誤內容   { error: { code, message, details? } }  ← 包了一層
+ *   錯誤內容   { error: { code, message, fields? } }  ← 包了一層
  *
  * 所以「什麼算失敗」「錯誤從哪裡取」兩件事都不一樣。
  */
 
-/** 攤平後的錯誤。對應後端 ErrorBodyEntity（見 model/api/schema.d.ts）。 */
-export interface ApiError {
-  code: string
-  message: string
-  details?: string[]
+import type { components } from '~/model/api/schema'
+
+/** 後端定義的錯誤形狀。**從契約取，不手寫。** */
+type BackendError = components['schemas']['ErrorBodyEntity']
+
+/**
+ * 攤平後的錯誤。
+ *
+ * code 在後端契約裡是字面值聯集（BAD_REQUEST | UNAUTHORIZED | ...），
+ * 這裡多加一個 **NETWORK_ERROR** —— 那是前端自己造的，代表
+ * 「請求根本沒到伺服器」（CORS 被擋、離線、後端沒起來）。
+ * 後端不可能回它，所以它不在契約裡；用聯集擴充而不是改成 string，
+ * 是為了讓 switch 的其他分支仍然被型別檢查。
+ *
+ * ⚠️ 這個型別原本是手寫的 interface，後端 Ch15 輪 ③ 把 details 換成 fields 時
+ * **typecheck 一個字都沒紅** —— 它只是安靜地讀到 undefined。
+ * 那正是 CLAUDE.md 那條「型別一律從產出來的契約取」要防的事。
+ */
+export type ApiError = Omit<BackendError, 'code'> & {
+  code: BackendError['code'] | 'NETWORK_ERROR'
 }
 
 /**
@@ -83,7 +98,7 @@ function extractApiError(e: unknown): ApiError {
     return {
       code: inner.code,
       message: inner.message,
-      details: inner.details,
+      fields: inner.fields,
     }
   }
 

@@ -38,8 +38,17 @@ export const useNotificationStore = defineStore('notification', () => {
         // 前端不要試圖分辨。
         return error('權限不足')
       case 'VALIDATION_FAILED':
-        // details 是逐條的驗證訊息，只有這一種錯誤才有。
-        return error(err.details?.join('、') ?? err.message)
+        // fields 是結構化的 [{ field, rule }]（後端 Ch15 輪 ③ 改的），
+        // **不是可以直接顯示的句子** —— rule 是 class-validator 的裝飾器名。
+        //
+        // 這裡只顯示一句通用訊息，理由是分工：
+        // 表單的即時回饋由前端的 rules 負責（它有完整的規則與文案），
+        // 後端的 400 是**防守用的** —— 使用者繞過前端驗證才會走到這裡。
+        //
+        // fields 真正的用途是**標紅對應的輸入框**：
+        //   err.fields?.forEach(f => markInvalid(f.field))
+        // 等表單元件接上之後再做，那不是 toast 的事。
+        return error('輸入的內容不正確，請檢查後再送出')
       default:
         return error(err.message)
     }

@@ -218,6 +218,18 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        FieldErrorEntity: {
+            /**
+             * @description 出錯的欄位路徑；巢狀時是完整路徑
+             * @example answers.0.questionId
+             */
+            field: string;
+            /**
+             * @description 違反的規則名。驗證失敗時是 class-validator 的裝飾器名，唯一衝突時是 unique
+             * @example minLength
+             */
+            rule: string;
+        };
         ErrorBodyEntity: {
             /**
              * @description 錯誤代碼，前端用它分支處理（不要解析 message）
@@ -230,13 +242,8 @@ export interface components {
              * @example 問卷不存在
              */
             message: string;
-            /**
-             * @description 驗證失敗時每條規則的訊息，只有 400 VALIDATION_FAILED 會有
-             * @example [
-             *       "title should not be empty"
-             *     ]
-             */
-            details?: string[];
+            /** @description 出錯的欄位清單。驗證失敗（400）與唯一衝突（409）會有，其餘錯誤沒有 */
+            fields?: components["schemas"]["FieldErrorEntity"][];
         };
         ErrorResponseEntity: {
             /** @description 錯誤內容 */
