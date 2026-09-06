@@ -62,39 +62,39 @@ async function submit() {
 </script>
 
 <template>
-  <v-container class="py-6" style="max-width: 880px">
-    <div class="d-flex align-center mb-4">
-      <h1 class="text-h5">新增問卷</h1>
-      <v-spacer />
-      <v-btn variant="text" to="/surveys">取消</v-btn>
-      <v-btn color="primary" :loading="pending" class="ml-2" @click="submit">
-        建立
-      </v-btn>
-    </div>
+  <AppShell title="新增問卷" subtitle="建立後是草稿，確認內容之後再發布" :max-width="880">
+    <template #actions>
+      <div class="d-flex ga-2">
+        <v-btn variant="flat" class="app-chip-ghost" to="/surveys">取消</v-btn>
+        <v-btn
+          size="large"
+          variant="flat"
+          :loading="pending"
+          style="background: var(--app-lime); color: #211e38; font-weight: 700"
+          @click="submit"
+        >
+          建立
+        </v-btn>
+      </div>
+    </template>
 
     <v-form ref="formRef" @submit.prevent="submit">
-      <v-card class="mb-4">
-        <v-card-text>
-          <v-text-field
-            v-model="title"
-            label="問卷標題"
-            variant="outlined"
-            counter="200"
-            :rules="[required, maxTitle]"
-            :error-messages="serverErrors.title"
-          />
-          <div class="text-body-2 text-medium-emphasis">
-            建立後是<strong>草稿</strong>，確認內容之後再發布。
-          </div>
-        </v-card-text>
+      <v-card class="pa-6 mb-4">
+        <v-text-field
+          v-model="title"
+          label="問卷標題"
+          counter="200"
+          :rules="[required, maxTitle]"
+          :error-messages="serverErrors.title"
+        />
       </v-card>
 
       <QuestionListEditor v-model="questions" :server-errors="serverErrors" />
 
-      <div class="text-body-2 text-medium-emphasis mt-3">
+      <div class="text-body-2 app-muted mt-4">
         不加題目也可以 —— 那會建立一份空草稿，之後再補。
         <strong>但空的問卷不能發布</strong>（後端會回 409）。
       </div>
     </v-form>
-  </v-container>
+  </AppShell>
 </template>

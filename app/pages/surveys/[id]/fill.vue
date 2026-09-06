@@ -93,30 +93,45 @@ async function submit() {
 </script>
 
 <template>
-  <v-container class="py-6" style="max-width: 760px">
-    <div class="d-flex align-center mb-4">
-      <h1 class="text-h5">{{ data?.title ?? '填寫問卷' }}</h1>
-      <v-spacer />
-      <v-btn variant="text" to="/surveys">返回列表</v-btn>
-      <v-btn
-        v-if="data"
-        color="primary"
-        class="ml-2"
-        :loading="pending"
-        :disabled="!complete"
-        @click="submit"
-      >
-        送出
-      </v-btn>
-    </div>
+  <AppShell
+    :title="data?.title ?? '填寫問卷'"
+    :subtitle="
+      data ? `共 ${questions.length} 題，每一題都要回答` : '　'
+    "
+    :max-width="760"
+  >
+    <template #actions>
+      <div class="d-flex align-center ga-4">
+        <!-- 進度放在按鈕旁邊：「為什麼不能送」要看得見，而不是按下去才知道。 -->
+        <span v-if="data && questions.length" class="app-header__subtitle">
+          {{ answered }} / {{ questions.length }}
+        </span>
+        <v-btn variant="flat" class="app-chip-ghost" to="/surveys">返回列表</v-btn>
+        <v-btn
+          v-if="data"
+          size="large"
+          variant="flat"
+          :loading="pending"
+          :disabled="!complete"
+          :style="
+            complete
+              ? 'background: var(--app-lime); color: #211e38; font-weight: 700'
+              : ''
+          "
+          @click="submit"
+        >
+          送出
+        </v-btn>
+      </div>
+    </template>
 
-    <v-progress-linear v-if="loading" indeterminate color="primary" />
+    <v-progress-linear v-if="loading" indeterminate color="primary" rounded />
 
     <!--
       讀不到只有一種情況：404。別人的草稿一律當作不存在（後端 canSeeSurvey），
       401 已經被 useMyService 清 session 並導去登入頁了。
     -->
-    <v-alert v-else-if="!data" type="error" variant="tonal">
+    <v-alert v-else-if="!data" type="error">
       找不到這份問卷，或它還沒有發布。
     </v-alert>
 
@@ -127,73 +142,59 @@ async function submit() {
         ⚠️ 這**不是**把後端規則複製過來 —— 送出鈕照樣可以按，
         真正擋下來的仍然是後端。這一段只是把已經知道的事提早說。
       -->
-      <v-alert
-        v-if="data.status !== 'PUBLISHED'"
-        type="warning"
-        variant="tonal"
-        class="mb-4"
-      >
+      <v-alert v-if="data.status !== 'PUBLISHED'" type="warning" class="mb-4">
         這份問卷還沒有發布，現在送出會被拒絕。
       </v-alert>
-
-      <div class="d-flex align-center mb-3">
-        <span class="text-body-2 text-medium-emphasis">
-          共 {{ questions.length }} 題，<strong>每一題都要回答</strong>
-        </span>
-        <v-spacer />
-        <span class="text-body-2 text-medium-emphasis">
-          {{ answered }} / {{ questions.length }}
-        </span>
-      </div>
 
       <v-card
         v-for="(q, i) in questions"
         :key="q.id"
-        class="mb-3"
-        variant="outlined"
+        class="pa-6 mb-3"
+        style="box-shadow: var(--app-shadow)"
       >
-        <v-card-text>
-          <div class="text-subtitle-1 mb-2">
-            {{ i + 1 }}. {{ q.title }}
-            <span class="text-error">*</span>
-          </div>
+        <div class="text-h6 font-weight-bold mb-4" style="line-height: 1.4">
+          <span class="app-muted mr-2">{{ i + 1 }}.</span>{{ q.title }}
+          <span style="color: var(--app-danger)">*</span>
+        </div>
 
-          <!--
-            單選用 v-radio-group：value 直接綁**選項的文字**，
-            所以送出時不必做任何轉換，後端拿到的就是它要比對的東西。
-          -->
-          <v-radio-group
-            v-if="q.type === 'SINGLE_CHOICE'"
-            v-model="answers[q.id]"
-            hide-details
-            density="comfortable"
-          >
-            <v-radio
-              v-for="option in q.options"
-              :key="option"
-              :label="option"
-              :value="option"
-            />
-          </v-radio-group>
-
-          <v-textarea
-            v-else
-            v-model="answers[q.id]"
-            variant="outlined"
-            rows="2"
-            auto-grow
-            counter="500"
-            hide-details="auto"
-            placeholder="請輸入你的回答"
+        <!--
+          單選用 v-radio-group：value 直接綁**選項的文字**，
+          所以送出時不必做任何轉換，後端拿到的就是它要比對的東西。
+        -->
+        <v-radio-group
+          v-if="q.type === 'SINGLE_CHOICE'"
+          v-model="answers[q.id]"
+          hide-details
+          color="primary"
+        >
+          <v-radio
+            v-for="option in q.options"
+            :key="option"
+            :label="option"
+            :value="option"
+            class="mb-1"
           />
-        </v-card-text>
+        </v-radio-group>
+
+        <v-textarea
+          v-else
+          v-model="answers[q.id]"
+          rows="2"
+          auto-grow
+          counter="500"
+          hide-details="auto"
+          placeholder="請輸入你的回答"
+        />
       </v-card>
 
-      <div v-if="questions.length === 0" class="text-medium-emphasis py-8 text-center">
+      <div
+        v-if="questions.length === 0"
+        class="app-row pa-10 text-center app-muted"
+      >
         這份問卷沒有任何題目。
       </div>
 
-      <div v-else class="text-body-2 text-medium-emphasis">
+      <div v-else class="text-body-2 app-muted mt-4">
         <!--
           「送出之後不能修改」是**目前的事實**（沒有編輯作答的端點），
           不是一條規則。等真的做了再改這句話。
@@ -201,5 +202,5 @@ async function submit() {
         送出之後無法修改。
       </div>
     </template>
-  </v-container>
+  </AppShell>
 </template>

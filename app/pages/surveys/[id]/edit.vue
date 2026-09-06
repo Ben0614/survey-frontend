@@ -192,81 +192,70 @@ async function togglePublish() {
 </script>
 
 <template>
-  <v-container class="py-6" style="max-width: 880px">
-    <div class="d-flex align-center mb-4">
-      <h1 class="text-h5">編輯問卷</h1>
-      <v-chip
-        v-if="data"
-        :color="isDraft ? 'grey' : 'success'"
-        size="small"
-        label
-        class="ml-3"
-      >
-        {{ isDraft ? '草稿' : '發布中' }}
-      </v-chip>
-      <v-spacer />
-      <v-btn variant="text" to="/surveys">返回列表</v-btn>
-      <v-btn
-        v-if="data"
-        variant="tonal"
-        class="ml-2"
-        :loading="publishing"
-        :disabled="dirty"
-        @click="togglePublish"
-      >
-        {{ isDraft ? '發布' : '撤回發布' }}
-      </v-btn>
-      <v-btn
-        v-if="data"
-        color="primary"
-        class="ml-2"
-        :loading="saving"
-        :disabled="!dirty"
-        @click="save"
-      >
-        儲存
-      </v-btn>
-    </div>
+  <AppShell
+    :title="data?.title ?? '編輯問卷'"
+    :subtitle="data ? (isDraft ? '草稿 · 題目可以改' : '發布中 · 題目唯讀') : '　'"
+    :max-width="880"
+  >
+    <template #actions>
+      <div class="d-flex ga-2">
+        <v-btn variant="flat" class="app-chip-ghost" to="/surveys">返回列表</v-btn>
+        <v-btn
+          v-if="data"
+          variant="flat"
+          class="app-chip-ghost"
+          :loading="publishing"
+          :disabled="dirty"
+          @click="togglePublish"
+        >
+          {{ isDraft ? '發布' : '撤回發布' }}
+        </v-btn>
+        <v-btn
+          v-if="data"
+          size="large"
+          variant="flat"
+          :loading="saving"
+          :disabled="!dirty"
+          :style="
+            dirty
+              ? 'background: var(--app-lime); color: #211e38; font-weight: 700'
+              : ''
+          "
+          @click="save"
+        >
+          儲存
+        </v-btn>
+      </div>
+    </template>
 
-    <v-progress-linear v-if="loading" indeterminate color="primary" />
+    <v-progress-linear v-if="loading" indeterminate color="primary" rounded />
 
     <!--
       讀不到只有一種情況要顯示：404。403 不會發生（canSeeSurvey 先擋），
       401 已經被 useMyService 清 session 並導去登入頁了。
     -->
-    <v-alert v-else-if="!data" type="error" variant="tonal">
+    <v-alert v-else-if="!data" type="error">
       找不到這份問卷，或你沒有權限編輯它。
     </v-alert>
 
     <v-form v-else ref="formRef">
-      <v-card class="mb-4">
-        <v-card-text>
-          <v-text-field
-            v-model="title"
-            label="問卷標題"
-            variant="outlined"
-            counter="200"
-            :rules="[required, maxTitle]"
-            :error-messages="serverErrors.title"
-          />
-          <div class="text-body-2 text-medium-emphasis">
-            <!--
-              標題在**兩種狀態都能改**，這不是漏掉：後端 PATCH /surveys/:id
-              只檢查擁有權，沒有 canEditQuestions。改錯字不會讓已送出的答案
-              對不起來，改題目才會。
-            -->
-            標題隨時可以改，已發布也一樣。
-          </div>
-        </v-card-text>
+      <v-card class="pa-6 mb-4">
+        <v-text-field
+          v-model="title"
+          label="問卷標題"
+          counter="200"
+          :rules="[required, maxTitle]"
+          :error-messages="serverErrors.title"
+        />
+        <!--
+          標題在**兩種狀態都能改**，這不是漏掉：後端 PATCH /surveys/:id
+          只檢查擁有權，沒有 canEditQuestions。改錯字不會讓已送出的答案
+          對不起來，改題目才會。
+        -->
+        <div class="text-body-2 app-muted">標題隨時可以改，已發布也一樣。</div>
       </v-card>
 
-      <v-alert
-        v-if="!isDraft"
-        type="info"
-        variant="tonal"
-        density="comfortable"
-        class="mb-3"
-      >
+      <v-alert v-if="!isDraft" type="info" class="mb-4">
         已發布的問卷不能改題目。要修改請先<strong>撤回發布</strong> ——
         但只要有人填過就撤不回來了（撤回之後題目能改，舊答案會對不起來）。
       </v-alert>
@@ -277,10 +266,10 @@ async function togglePublish() {
         :readonly="!isDraft"
       />
 
-      <div v-if="isDraft" class="text-body-2 text-medium-emphasis mt-3">
+      <div v-if="isDraft" class="text-body-2 app-muted mt-4">
         題目的順序就是這裡的順序。<strong>儲存時整份送出</strong> ——
         沒有列出來的題目就是被刪掉了。
       </div>
     </v-form>
-  </v-container>
+  </AppShell>
 </template>

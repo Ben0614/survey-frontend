@@ -22,3 +22,11 @@ logs
 .env
 .env.*
 !.env.example
+
+# 設計畫布的產出檔（約 2 MB，由 design/*.dc.html + canvas.json 重新產生）。
+# **來源進版控、產物不進** —— 同 app/model/api/schema.d.ts 的反面：
+# 那一份是產的但要進（它是契約的快照，diff 有意義），這一份的 diff 沒有意義。
+# ⚠️ 反向規則不能省：`*.dc.html` 也符合 `*.html`，
+# 少了第二行會把設計來源一起排除掉（而且不會有任何警告）。
+design/*.html
+!design/*.dc.html

@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #A3E635; }
+    a:hover { color: #BEF264; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 900px; background: #0E1116; font-family: 'Noto Sans TC', system-ui, sans-serif; color: #E6E9EF; box-sizing: border-box; display: flex; flex-direction: column;">
+
+  <!-- 頂列 -->
+  <div style="display: flex; align-items: center; gap: 16px; padding: 0 28px; height: 56px; border-bottom: 1px solid #1E242E; background: #12161D;">
+    <div style="width: 22px; height: 22px; border-radius: 5px; background: #A3E635; display: flex; align-items: center; justify-content: center;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0E1116" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12l5 5L20 6"></path>
+      </svg>
+    </div>
+    <span style="font-size: 14px; font-weight: 700; letter-spacing: -0.01em;">問卷平台</span>
+    <div style="flex-grow: 1;"></div>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">nnnn@gmail.com</span>
+    <span style="font-size: 12px; color: #8A93A3; border: 1px solid #242C38; border-radius: 4px; padding: 5px 10px;">登出</span>
+  </div>
+
+  <div style="padding: 24px 28px; display: flex; flex-direction: column; gap: 18px;">
+
+    <!-- 標題 + 統計 -->
+    <div style="display: flex; align-items: flex-end; gap: 28px;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 10px; letter-spacing: 0.2em; color: #6B7484;">SURVEYS</span>
+        <span style="font-size: 26px; font-weight: 700; letter-spacing: -0.02em;">問卷</span>
+      </div>
+      <div style="display: flex; gap: 28px; padding-bottom: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; color: #A3E635;">14</span>
+          <span style="font-size: 11px; color: #6B7484;">總數</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600;">8</span>
+          <span style="font-size: 11px; color: #6B7484;">發布中</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600;">63</span>
+          <span style="font-size: 11px; color: #6B7484;">總填答</span>
+        </div>
+      </div>
+      <div style="flex-grow: 1;"></div>
+      <div style="background: #A3E635; color: #0E1116; font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 5px; display: flex; align-items: center; gap: 7px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        新增問卷
+      </div>
+    </div>
+
+    <!-- 篩選列 -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 12px; font-weight: 500; background: #1E242E; border: 1px solid #2E3746; border-radius: 4px; padding: 6px 12px;">全部</span>
+      <span style="font-size: 12px; color: #8A93A3; border: 1px solid #1E242E; border-radius: 4px; padding: 6px 12px;">我建立的</span>
+      <span style="font-size: 12px; color: #8A93A3; border: 1px solid #1E242E; border-radius: 4px; padding: 6px 12px;">我的草稿</span>
+      <span style="font-size: 12px; color: #8A93A3; border: 1px solid #1E242E; border-radius: 4px; padding: 6px 12px;">可以填的</span>
+      <div style="flex-grow: 1;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; background: #12161D; border: 1px solid #242C38; border-radius: 5px; padding: 7px 11px; width: 220px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7484" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+        <span style="font-size: 12px; color: #6B7484;">搜尋標題</span>
+      </div>
+    </div>
+
+    <!-- 表 -->
+    <div style="border: 1px solid #1E242E; border-radius: 6px; overflow: hidden; background: #12161D;">
+      <div style="display: grid; grid-template-columns: 1fr 96px 64px 64px 92px 210px; gap: 16px; padding: 10px 16px; background: #161B23; border-bottom: 1px solid #1E242E; font-size: 10px; letter-spacing: 0.14em; color: #6B7484;">
+        <span>標題</span><span>狀態</span><span style="text-align: right;">題數</span><span style="text-align: right;">填答</span><span>建立</span><span></span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 96px 64px 64px 92px 210px; gap: 16px; padding: 13px 16px; align-items: center; border-bottom: 1px solid #1A202A;">
+        <span style="font-size: 14px; font-weight: 500;">員工滿意度調查 2026</span>
+        <span style="font-size: 11px; color: #A3E635; background: rgba(163,230,53,0.1); border: 1px solid rgba(163,230,53,0.25); border-radius: 3px; padding: 2px 7px; justify-self: start;">發布中</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px;">5</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #A3E635;">12</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">08-01</span>
+        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">填寫</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">編輯</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">結果</span>
+          <span style="font-size: 11px; color: #F87171; border: 1px solid rgba(248,113,113,0.28); border-radius: 3px; padding: 4px 9px;">刪除</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 96px 64px 64px 92px 210px; gap: 16px; padding: 13px 16px; align-items: center; border-bottom: 1px solid #1A202A;">
+        <span style="font-size: 14px; font-weight: 500;">公司福利制度檢討</span>
+        <span style="font-size: 11px; color: #8A93A3; background: #1A202A; border: 1px solid #242C38; border-radius: 3px; padding: 2px 7px; justify-self: start;">草稿</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px;">3</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4B5563;">0</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">08-03</span>
+        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">編輯</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">結果</span>
+          <span style="font-size: 11px; color: #F87171; border: 1px solid rgba(248,113,113,0.28); border-radius: 3px; padding: 4px 9px;">刪除</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 96px 64px 64px 92px 210px; gap: 16px; padding: 13px 16px; align-items: center; border-bottom: 1px solid #1A202A;">
+        <span style="font-size: 14px; font-weight: 500;">遠端工作意願調查</span>
+        <span style="font-size: 11px; color: #A3E635; background: rgba(163,230,53,0.1); border: 1px solid rgba(163,230,53,0.25); border-radius: 3px; padding: 2px 7px; justify-self: start;">發布中</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px;">4</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #A3E635;">1</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">08-03</span>
+        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">填寫</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">編輯</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">結果</span>
+          <span style="font-size: 11px; color: #F87171; border: 1px solid rgba(248,113,113,0.28); border-radius: 3px; padding: 4px 9px;">刪除</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 96px 64px 64px 92px 210px; gap: 16px; padding: 13px 16px; align-items: center; border-bottom: 1px solid #1A202A;">
+        <span style="font-size: 14px; font-weight: 500;">新產品命名投票</span>
+        <span style="font-size: 11px; color: #A3E635; background: rgba(163,230,53,0.1); border: 1px solid rgba(163,230,53,0.25); border-radius: 3px; padding: 2px 7px; justify-self: start;">發布中</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px;">3</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #A3E635;">7</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">08-05</span>
+        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">填寫</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">編輯</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">結果</span>
+          <span style="font-size: 11px; color: #F87171; border: 1px solid rgba(248,113,113,0.28); border-radius: 3px; padding: 4px 9px;">刪除</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 96px 64px 64px 92px 210px; gap: 16px; padding: 13px 16px; align-items: center;">
+        <span style="font-size: 14px; font-weight: 500;">辦公室設備需求</span>
+        <span style="font-size: 11px; color: #8A93A3; background: #1A202A; border: 1px solid #242C38; border-radius: 3px; padding: 2px 7px; justify-self: start;">草稿</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px;">6</span>
+        <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4B5563;">0</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">08-06</span>
+        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">編輯</span>
+          <span style="font-size: 11px; color: #B6BECC; border: 1px solid #242C38; border-radius: 3px; padding: 4px 9px;">結果</span>
+          <span style="font-size: 11px; color: #F87171; border: 1px solid rgba(248,113,113,0.28); border-radius: 3px; padding: 4px 9px;">刪除</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6B7484;">14 rows</span>
+      <div style="flex-grow: 1;"></div>
+      <div style="display: flex; gap: 5px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: #A3E635; color: #0E1116; border-radius: 4px;">1</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: #8A93A3; border: 1px solid #242C38; border-radius: 4px;">2</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: #8A93A3; border: 1px solid #242C38; border-radius: 4px;">3</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

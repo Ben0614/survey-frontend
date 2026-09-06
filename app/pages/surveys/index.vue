@@ -22,6 +22,10 @@
  *
  * 第四種分類「我填過的」**做不到**：Response 表沒有記誰填的（後端 Ch5 的
  * 匿名決定），那要改 schema，不是加一個參數。刻意留到之後。
+ *
+ * **版面在 Ch17 之後重做過一次**：表格換成卡片列，登出移到 `<AppShell>`。
+ * 卡片列的代價是一頁看得到的列數變少，換到的是每一列的層級更清楚
+ *（標題最大、數字次之、動作最輕），而這一頁的動作有四個。
  */
 import type { FindSurveysQuery, SurveyListItem, SurveyStatus } from '~/api/surveys'
 
@@ -47,11 +51,53 @@ const TAB_QUERY: Record<TabKey, FindSurveysQuery> = {
   open: { status: 'PUBLISHED' },
 }
 
+// 顯示用的順序與標籤。跟 TAB_QUERY 分開放是因為它們回答的是兩個問題
+//（「怎麼查」與「怎麼顯示」），而且這一份有順序、那一份沒有。
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'all', label: '全部' },
+  { key: 'mine', label: '我建立的' },
+  { key: 'draft', label: '我的草稿' },
+  { key: 'open', label: '可以填的' },
+]
+
 const tab = ref<TabKey>('all')
 const page = ref(1)
 const pageSize = ref(10)
-const search = ref('')
+// ⚠️ **型別是 `string | null`，不是 `string`。**
+//
+// `v-text-field` 的 `clearable` 叉叉會把 model 設成 **null**（不是空字串），
+// 而原本這裡宣告成 `ref('')`、watcher 裡寫 `value.trim()` ——
+// 按下叉叉就是 `null.trim()`，TypeError 丟在 setTimeout 裡**沒有任何地方接**，
+// 於是 q 永遠沒被更新、列表不會重抓。
+//
+// 症狀是「按了叉叉，字不見了但清單沒變」，而 console 以外看不出任何東西。
+// 這個洞從 Ch17 輪 ① 就在，只是沒有人按過那個叉叉。
+const search = ref<string | null>('')
 const q = ref<string | undefined>(undefined)
+
+/**
+ * 把目前輸入框的內容套用到查詢上。
+ *
+ * 抽成具名函式而不是寫在 watcher 裡，是因為有三個觸發點：
+ *   打字     debounce 300ms 之後
+ *   Enter    立刻
+ *   按叉叉   立刻
+ * 後兩個「立刻」如果各寫一份，遲早會有一份忘了先 clearTimeout ——
+ * 那會讓已經套用過的查詢在 300ms 後被舊值再蓋一次。
+ */
+function applySearch() {
+  clearTimeout(timer)
+  q.value = search.value?.trim() || undefined
+}
+
+/**
+ * 叉叉的處理。**自己把 model 設成 null 再套用**，不依賴 Vuetify 的事件順序 ——
+ * `@click:clear` 與 model 更新誰先誰後是它的內部細節，賭那個順序會很脆。
+ */
+function clearSearch() {
+  search.value = null
+  applySearch()
+}
 
 // [搜尋] 打字時不要每一鍵都送請求。
 //
@@ -59,11 +105,9 @@ const q = ref<string | undefined>(undefined)
 // → 全表掃描（backend surveys.service.ts 的註解量過）。輸入「員工滿意度」
 // 六個字就是六次全表掃描，而使用者只想要最後那一次。
 let timer: ReturnType<typeof setTimeout> | undefined
-watch(search, (value) => {
+watch(search, () => {
   clearTimeout(timer)
-  timer = setTimeout(() => {
-    q.value = value.trim() || undefined
-  }, 300)
+  timer = setTimeout(applySearch, 300)
 })
 onBeforeUnmount(() => clearTimeout(timer))
 
@@ -113,9 +157,14 @@ const STATUS_LABEL: Record<SurveyStatus, string> = {
   DRAFT: '草稿',
   PUBLISHED: '發布中',
 }
-const STATUS_COLOR: Record<SurveyStatus, string> = {
-  DRAFT: 'grey',
-  PUBLISHED: 'success',
+
+// 狀態標籤用自訂的底色／文字色，而不是 Vuetify 的 color 名稱：
+// 這一版要的是低飽和的柔和標籤（淡綠底＋深綠字），
+// 而 color="success" 會給整塊實心綠，在白卡上太搶。
+const STATUS_STYLE: Record<SurveyStatus, string> = {
+  DRAFT: 'background: var(--app-fill); color: var(--app-ink-soft);',
+  PUBLISHED:
+    'background: var(--app-success-soft); color: var(--app-success);',
 }
 
 // ⚠️ 日期一定要指定時區，否則 SSR 會有 hydration mismatch：
@@ -136,7 +185,7 @@ const formatDate = (iso: string) => dateFormat.format(new Date(iso))
 const isMine = (s: SurveyListItem) =>
   s.ownerId !== null && s.ownerId === auth.user?.id
 
-// ── 刪除（只有 ADMIN 看得到）──────────────────────────────
+// ── 刪除 ──────────────────────────────────────────────────
 //
 // 用 v-dialog 而不是原生的 confirm()：原生對話框會凍住整個分頁
 //（包含 Vue 的排程），而且沒辦法做成這個 app 的樣子。
@@ -175,165 +224,201 @@ async function remove() {
   }
   await refresh()
 }
-
-async function logout() {
-  auth.clearSession()
-  await navigateTo('/login')
-}
 </script>
 
 <template>
-  <v-container class="py-6">
-    <div class="d-flex align-center mb-4">
-      <h1 class="text-h5">問卷</h1>
-      <v-spacer />
-      <span class="text-body-2 text-medium-emphasis mr-3">
-        {{ auth.user?.email }}
-      </span>
-      <v-btn variant="text" size="small" @click="logout">登出</v-btn>
-    </div>
-
-    <v-card>
-      <v-tabs v-model="tab" color="primary">
-        <v-tab value="all">全部</v-tab>
-        <v-tab value="mine">我建立的</v-tab>
-        <v-tab value="draft">我的草稿</v-tab>
-        <v-tab value="open">可以填的</v-tab>
-      </v-tabs>
-
-      <v-card-text>
-        <div class="d-flex align-center ga-3 flex-wrap">
-          <v-text-field
-            v-model="search"
-            label="搜尋標題"
-            density="compact"
-            variant="outlined"
-            hide-details
-            clearable
-            style="max-width: 320px"
-          />
-          <v-spacer />
-          <!--
-            四個按鈕的目標頁面都接上了：新增問卷（輪 ②）、編輯（輪 ③）、
-            填寫（輪 ④）、結果（輪 ⑤a）。這一排從 Ch17 開工時全部 disabled 開始。
-          -->
-          <v-btn color="primary" to="/surveys/new" prepend-icon="mdi-plus">
-            新增問卷
-          </v-btn>
-        </div>
-      </v-card-text>
-
-      <v-progress-linear v-if="pending" indeterminate color="primary" />
-
-      <v-table>
-        <thead>
-          <tr>
-            <th>標題</th>
-            <th style="width: 110px">狀態</th>
-            <th class="text-right" style="width: 80px">題數</th>
-            <th class="text-right" style="width: 90px">填答</th>
-            <th style="width: 130px">建立時間</th>
-            <th style="width: 220px" />
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="s in items" :key="s.id">
-            <td>{{ s.title }}</td>
-            <td>
-              <v-chip :color="STATUS_COLOR[s.status]" size="small" label>
-                {{ STATUS_LABEL[s.status] }}
-              </v-chip>
-            </td>
-            <!-- 這兩欄就是輪 ① 的產出。沒有後端那行 _count 的話，
-                 光是畫出它們就要對每一筆再打兩次 API。 -->
-            <td class="text-right">{{ s.questionCount }}</td>
-            <td class="text-right">{{ s.responseCount }}</td>
-            <td class="text-medium-emphasis">{{ formatDate(s.createdAt) }}</td>
-            <td class="text-right">
-              <!-- 輪 ④ 接上。已發布才出現 —— 草稿送出去後端會回 409。 -->
-              <v-btn
-                v-if="s.status === 'PUBLISHED'"
-                size="small"
-                variant="text"
-                :to="`/surveys/${s.id}/fill`"
-              >
-                填寫
-              </v-btn>
-              <!-- 輪 ③ 接上。已發布的也進得去 —— 標題還是能改，題目那一半唯讀。 -->
-              <v-btn
-                v-if="isMine(s)"
-                size="small"
-                variant="text"
-                :to="`/surveys/${s.id}/edit`"
-              >
-                編輯
-              </v-btn>
-              <!-- 輪 ⑤a 接上。結果只有擁有者與 ADMIN 看得到（後端 403）。 -->
-              <v-btn
-                v-if="isMine(s)"
-                size="small"
-                variant="text"
-                :to="`/surveys/${s.id}/result`"
-              >
-                結果
-              </v-btn>
-              <!--
-                刪除是這一頁唯一真的會發請求的動作。
-
-                ⚠️ **這個條件必須跟後端的 canManageSurvey 一致，而沒有任何工具
-                會在它們不一致時叫。** 輪 ① 寫的是 v-if="auth.isAdmin"（當時後端是
-                @Roles(Role.ADMIN)）；輪 ② 後端放寬成「擁有者或 ADMIN」，
-                **而這一行留在原地** —— 於是擁有者看不到自己問卷的刪除鈕。
-                tsc 不會紅、契約 diff 也看不出來：**型別能從契約產，權限規則不能。**
-
-                另一件事沒變：藏起來只是 UI。真正擋下來的是後端（403）。
-
-                「有人填答就不能刪」那條規則**刻意不複製到這裡** ——
-                按鈕照樣出現，按下去由後端回 409，useMyService 會把它的訊息
-                跳成 toast（CONFLICT 走 notification 的 default 分支）。
-                前端每複製一條後端規則，就多一個會安靜過期的地方，而上面那段
-                就是它過期的樣子。
-              -->
-              <v-btn
-                v-if="isMine(s) || auth.isAdmin"
-                size="small"
-                variant="text"
-                color="error"
-                @click="target = s"
-              >
-                刪除
-              </v-btn>
-            </td>
-          </tr>
-
-          <tr v-if="!pending && items.length === 0">
-            <td colspan="6" class="text-center text-medium-emphasis py-8">
-              沒有符合條件的問卷
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
-
-      <div
-        v-if="meta && meta.totalPages > 1"
-        class="d-flex align-center justify-space-between px-4 py-3"
+  <AppShell
+    title="我的問卷"
+    :subtitle="
+      meta ? `${meta.total} 份問卷` : '　'
+    "
+  >
+    <template #actions>
+      <!--
+        頭帶上唯一的主要動作，用檸檬綠 —— 全站只有這一種按鈕是這個顏色，
+        所以它不必再靠大小或位置去搶注意力。
+      -->
+      <v-btn
+        to="/surveys/new"
+        size="large"
+        variant="flat"
+        prepend-icon="mdi-plus"
+        style="background: var(--app-lime); color: #211e38; font-weight: 700"
       >
-        <span class="text-body-2 text-medium-emphasis">
-          共 {{ meta.total }} 筆
-        </span>
-        <v-pagination
-          v-model="page"
-          :length="meta.totalPages"
-          :total-visible="5"
+        新增問卷
+      </v-btn>
+    </template>
+
+    <!--
+      分類 + 搜尋放在頭帶裡（見 AppShell 的 filters slot），不在內容區 ——
+      內容區疊上來的那 40px 落在一排膠囊上會很難看。
+    -->
+    <template #filters>
+      <div class="d-flex align-center ga-2 flex-wrap">
+        <v-btn
+          v-for="t in TABS"
+          :key="t.key"
+          size="default"
+          variant="flat"
+          class="app-pill"
+          :class="tab === t.key ? 'app-pill--active' : ''"
+          @click="tab = t.key"
+        >
+          {{ t.label }}
+        </v-btn>
+
+        <v-spacer />
+
+        <v-text-field
+          v-model="search"
+          placeholder="搜尋標題"
+          prepend-inner-icon="mdi-magnify"
           density="comfortable"
+          variant="solo"
+          flat
+          rounded="pill"
+          bg-color="white"
+          hide-details
+          clearable
+          style="max-width: 260px"
+          @keyup.enter="applySearch"
+          @click:clear="clearSearch"
         />
       </div>
-    </v-card>
+    </template>
+
+    <v-progress-linear
+      v-if="pending"
+      indeterminate
+      color="primary"
+      rounded
+      class="mb-3"
+    />
+
+    <!-- 卡片列 -->
+    <div class="d-flex flex-column ga-3">
+      <div
+        v-for="s in items"
+        :key="s.id"
+        class="app-row pa-5 d-flex align-center ga-6 flex-wrap"
+      >
+        <!--
+          三個區塊都給**固定的 flex 基準寬**，不是讓它們自己撐。
+          動作按鈕的數量會隨權限與狀態變（4 個 / 3 個 / 1 個），
+          不固定寬度的話每一列的數字會落在不同的 x —— 掃視時很明顯。
+        -->
+        <div style="flex: 1 1 240px; min-width: 0">
+          <div class="text-h6 font-weight-bold" style="line-height: 1.3">
+            {{ s.title }}
+          </div>
+          <div class="d-flex align-center ga-3 mt-2">
+            <span
+              class="text-caption font-weight-bold px-3 py-1"
+              style="border-radius: 999px"
+              :style="STATUS_STYLE[s.status]"
+            >
+              {{ STATUS_LABEL[s.status] }}
+            </span>
+            <span class="text-body-2 app-muted">{{ formatDate(s.createdAt) }}</span>
+          </div>
+        </div>
+
+        <!-- 這兩個數字就是輪 ① 的產出。沒有後端那行 _count 的話，
+             光是畫出它們就要對每一筆再打兩次 API。 -->
+        <div class="d-flex ga-6 text-center justify-end" style="flex: 0 0 130px">
+          <div>
+            <div class="app-stat">{{ s.questionCount }}</div>
+            <div class="app-stat__label">題</div>
+          </div>
+          <div>
+            <div
+              class="app-stat"
+              :class="s.responseCount === 0 ? 'app-stat--muted' : ''"
+              :style="s.responseCount > 0 ? 'color: var(--app-primary)' : ''"
+            >
+              {{ s.responseCount }}
+            </div>
+            <div class="app-stat__label">填答</div>
+          </div>
+        </div>
+
+        <div class="d-flex ga-2 align-center justify-end" style="flex: 0 0 320px">
+          <v-btn
+            v-if="s.status === 'PUBLISHED'"
+            size="small"
+            variant="flat"
+            class="app-btn-soft"
+            :to="`/surveys/${s.id}/fill`"
+          >
+            填寫
+          </v-btn>
+          <v-btn
+            v-if="isMine(s)"
+            size="small"
+            variant="flat"
+            class="app-btn-soft"
+            :to="`/surveys/${s.id}/edit`"
+          >
+            編輯
+          </v-btn>
+          <v-btn
+            v-if="isMine(s)"
+            size="small"
+            variant="flat"
+            color="primary"
+            :to="`/surveys/${s.id}/result`"
+          >
+            結果
+          </v-btn>
+          <!--
+            ⚠️ **這個條件必須跟後端的 canManageSurvey 一致，而沒有任何工具
+            會在它們不一致時叫。** 輪 ① 寫的是 v-if="auth.isAdmin"（當時後端是
+            @Roles(Role.ADMIN)）；輪 ② 後端放寬成「擁有者或 ADMIN」，
+            **而這一行留在原地** —— 於是擁有者看不到自己問卷的刪除鈕。
+            tsc 不會紅、契約 diff 也看不出來：**型別能從契約產，權限規則不能。**
+
+            另一件事沒變：藏起來只是 UI。真正擋下來的是後端（403）。
+
+            「有人填答就不能刪」那條規則**刻意不複製到這裡** ——
+            按鈕照樣出現，按下去由後端回 409，useMyService 會把它的訊息
+            跳成 toast（CONFLICT 走 notification 的 default 分支）。
+          -->
+          <v-btn
+            v-if="isMine(s) || auth.isAdmin"
+            icon="mdi-trash-can-outline"
+            size="small"
+            variant="flat"
+            class="app-btn-danger-soft"
+            @click="target = s"
+          />
+        </div>
+      </div>
+
+      <div
+        v-if="!pending && items.length === 0"
+        class="app-row pa-10 text-center app-muted"
+      >
+        沒有符合條件的問卷
+      </div>
+    </div>
+
+    <div
+      v-if="meta && meta.totalPages > 1"
+      class="d-flex align-center justify-space-between mt-5"
+    >
+      <span class="text-body-2 app-muted">共 {{ meta.total }} 筆</span>
+      <v-pagination
+        v-model="page"
+        :length="meta.totalPages"
+        :total-visible="5"
+        density="comfortable"
+      />
+    </div>
 
     <v-dialog v-model="confirming" max-width="420" :persistent="deleting">
-      <v-card>
-        <v-card-title class="text-h6">刪除問卷</v-card-title>
-        <v-card-text>
+      <v-card class="pa-2">
+        <v-card-title class="text-h6 font-weight-bold">刪除問卷</v-card-title>
+        <v-card-text class="app-ink-soft">
           <!--
             這裡原本有一段「已經有 N 份填答，會一起被刪掉」的警告。
             輪 ② 之後那句話是**假的** —— 後端改成有填答就回 409、不刪。
@@ -344,14 +429,21 @@ async function logout() {
           -->
           確定要刪除「{{ target?.title }}」嗎？
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="px-4 pb-4">
           <v-spacer />
-          <v-btn variant="text" :disabled="deleting" @click="target = null">
+          <v-btn
+            variant="flat"
+            class="app-btn-soft"
+            :disabled="deleting"
+            @click="target = null"
+          >
             取消
           </v-btn>
-          <v-btn color="error" :loading="deleting" @click="remove">刪除</v-btn>
+          <v-btn color="error" variant="flat" :loading="deleting" @click="remove">
+            刪除
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </AppShell>
 </template>

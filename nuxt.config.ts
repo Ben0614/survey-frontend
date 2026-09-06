@@ -24,7 +24,35 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
 
-  css: ['vuetify/lib/styles/main.sass', '@mdi/font/css/materialdesignicons.css'],
+  // ⚠️ 順序有意義：Vuetify 的樣式要在 app.css 之前，否則 token 與
+  // 少數覆蓋規則會被 Vuetify 的預設蓋掉。
+  css: [
+    'vuetify/lib/styles/main.sass',
+    '@mdi/font/css/materialdesignicons.css',
+    '~/assets/css/app.css',
+  ],
+
+  // 字體從 Google Fonts 來。preconnect 兩行不是裝飾 ——
+  // 少了它們，字體檔要等到 CSS 下載完才開始連線，首屏會閃一次系統字。
+  //
+  // 只載三個字重（400/700/900）。中文字體檔很大，每多一個字重就是
+  // 多一份完整的字集；設計上用不到的就不要載。
+  app: {
+    head: {
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: '',
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap',
+        },
+      ],
+    },
+  },
 
   vite: {
     ssr: {

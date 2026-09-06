@@ -113,14 +113,18 @@ const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
 </script>
 
 <template>
-  <v-container class="py-6" style="max-width: 820px">
-    <div class="d-flex align-center mb-4">
-      <h1 class="text-h5">填答結果</h1>
-      <v-spacer />
-      <v-btn variant="text" to="/surveys">返回列表</v-btn>
-    </div>
+  <AppShell
+    title="填答結果"
+    :subtitle="
+      data ? `${data.responseCount} 份填答 · ${questions.length} 題` : '　'
+    "
+    :max-width="880"
+  >
+    <template #actions>
+      <v-btn variant="flat" class="app-chip-ghost" to="/surveys">返回列表</v-btn>
+    </template>
 
-    <v-progress-linear v-if="loading" indeterminate color="primary" />
+    <v-progress-linear v-if="loading" indeterminate color="primary" rounded />
 
     <!--
       讀不到有兩種原因，而它們**對前端是同一件事**:
@@ -128,36 +132,19 @@ const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
         404  問卷不存在，或那是別人的草稿（canSeeSurvey 就當它不存在）
       兩種都是「你不能看這一頁」，所以只有一種畫面。
     -->
-    <v-alert v-else-if="!data" type="error" variant="tonal">
+    <v-alert v-else-if="!data" type="error">
       看不到這份問卷的結果 —— 它不存在，或者你不是它的擁有者。
     </v-alert>
 
     <template v-else>
-      <v-card class="mb-4">
-        <v-card-text class="d-flex align-center">
-          <div>
-            <div class="text-h4">{{ data.responseCount }}</div>
-            <div class="text-body-2 text-medium-emphasis">份填答</div>
-          </div>
-          <v-divider vertical class="mx-6" />
-          <div>
-            <div class="text-h4">{{ questions.length }}</div>
-            <div class="text-body-2 text-medium-emphasis">題</div>
-          </div>
-        </v-card-text>
-
-        <v-tabs v-model="tab" color="primary">
+      <v-card class="mb-4 px-2" style="box-shadow: var(--app-shadow)">
+        <v-tabs v-model="tab" color="primary" density="comfortable">
           <v-tab value="summary">摘要</v-tab>
           <v-tab value="list">個別回應</v-tab>
         </v-tabs>
       </v-card>
 
-      <v-alert
-        v-if="data.responseCount === 0"
-        type="info"
-        variant="tonal"
-        class="mb-4"
-      >
+      <v-alert v-if="data.responseCount === 0" type="info" class="mb-4">
         還沒有人填寫這份問卷。
       </v-alert>
 
@@ -166,84 +153,76 @@ const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
         <v-card
           v-for="(q, i) in questions"
           :key="q.questionId"
-          class="mb-3"
-          variant="outlined"
+          class="pa-6 mb-3"
+          style="box-shadow: var(--app-shadow)"
         >
-          <v-card-text>
-            <div class="d-flex align-center mb-3">
-              <span class="text-subtitle-1">{{ i + 1 }}. {{ q.title }}</span>
-              <v-spacer />
-              <span class="text-body-2 text-medium-emphasis">
-                {{ q.answerCount }} 筆回答
-              </span>
+          <div class="d-flex align-center ga-4 mb-4">
+            <span class="text-h6 font-weight-bold" style="line-height: 1.4">
+              <span class="app-muted mr-2">{{ i + 1 }}.</span>{{ q.title }}
+            </span>
+            <v-spacer />
+            <span class="text-body-2 app-muted" style="white-space: nowrap">
+              {{ q.answerCount }} 筆回答
+            </span>
+          </div>
+
+          <!--
+            單選題:每個選項一條長條。
+            ⚠️ **沒有人選的選項也會出現（count 是 0）** —— 那是後端刻意以題目的
+            options 為基準組裝的結果。若讓資料庫的 GROUP BY 決定，
+            零票的選項會整個消失，畫面上少一條長條，而使用者會以為那個選項不存在。
+          -->
+          <template v-if="q.options">
+            <div v-for="option in q.options" :key="option.option" class="mb-3">
+              <div class="d-flex align-center text-body-2 mb-1">
+                <span class="font-weight-medium">{{ option.option }}</span>
+                <v-spacer />
+                <span class="app-muted">
+                  {{ option.count }}（{{ percent(option.count, q.answerCount) }}%）
+                </span>
+              </div>
+              <v-progress-linear
+                :model-value="percent(option.count, q.answerCount)"
+                color="primary"
+                height="12"
+                rounded
+                bg-color="#EFEDF5"
+              />
             </div>
+          </template>
 
-            <!--
-              單選題:每個選項一條長條。
-              ⚠️ **沒有人選的選項也會出現（count 是 0）** —— 那是後端刻意以題目的
-              options 為基準組裝的結果。若讓資料庫的 GROUP BY 決定，
-              零票的選項會整個消失，畫面上少一條長條，而使用者會以為那個選項不存在。
-            -->
-            <template v-if="q.options">
-              <div v-for="option in q.options" :key="option.option" class="mb-2">
-                <div class="d-flex align-center text-body-2 mb-1">
-                  <span>{{ option.option }}</span>
-                  <v-spacer />
-                  <span class="text-medium-emphasis">
-                    {{ option.count }}（{{
-                      percent(option.count, q.answerCount)
-                    }}%）
-                  </span>
-                </div>
-                <v-progress-linear
-                  :model-value="percent(option.count, q.answerCount)"
-                  color="primary"
-                  height="10"
-                  rounded
-                  bg-color="grey-lighten-3"
-                />
-              </div>
-            </template>
-
-            <!--
-              簡答題數不出分佈（每個人寫的都不一樣），所以只顯示筆數與最近幾筆原文。
-              **這是抽樣不是全部** —— 後端只回最近 5 筆，要看全部請切到「個別回應」。
-            -->
-            <template v-else-if="q.samples">
+          <!--
+            簡答題數不出分佈（每個人寫的都不一樣），所以只顯示筆數與最近幾筆原文。
+            **這是抽樣不是全部** —— 後端只回最近 5 筆，要看全部請切到「個別回應」。
+          -->
+          <template v-else-if="q.samples">
+            <div v-if="q.samples.length === 0" class="app-muted text-body-2">
+              還沒有人回答這一題。
+            </div>
+            <template v-else>
+              <div class="text-body-2 app-muted mb-2">最近的回答</div>
               <div
-                v-if="q.samples.length === 0"
-                class="text-medium-emphasis text-body-2"
+                v-for="(sample, j) in q.samples"
+                :key="j"
+                class="pa-3 mb-2 text-body-2"
+                style="background: var(--app-fill); border-radius: 14px"
               >
-                還沒有人回答這一題。
+                {{ sample }}
               </div>
-              <template v-else>
-                <div class="text-body-2 text-medium-emphasis mb-2">
-                  最近的回答
-                </div>
-                <v-sheet
-                  v-for="(sample, j) in q.samples"
-                  :key="j"
-                  class="pa-3 mb-2 text-body-2"
-                  color="grey-lighten-4"
-                  rounded
-                >
-                  {{ sample }}
-                </v-sheet>
-                <div
-                  v-if="q.answerCount > q.samples.length"
-                  class="text-body-2 text-medium-emphasis"
-                >
-                  另外還有 {{ q.answerCount - q.samples.length }} 筆沒有顯示 ——
-                  切到「個別回應」可以逐筆看完。
-                </div>
-              </template>
+              <div
+                v-if="q.answerCount > q.samples.length"
+                class="text-body-2 app-muted"
+              >
+                另外還有 {{ q.answerCount - q.samples.length }} 筆沒有顯示 ——
+                切到「個別回應」可以逐筆看完。
+              </div>
             </template>
-          </v-card-text>
+          </template>
         </v-card>
 
         <div
           v-if="questions.length === 0"
-          class="text-center text-medium-emphasis py-8"
+          class="app-row pa-10 text-center app-muted"
         >
           這份問卷沒有任何題目。
         </div>
@@ -251,10 +230,8 @@ const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
 
       <!-- ── 個別回應 ──────────────────────────────────── -->
       <template v-else>
-        <div class="d-flex align-center mb-3">
-          <span class="text-body-2 text-medium-emphasis">
-            一次顯示 {{ PAGE_SIZE }} 筆
-          </span>
+        <div class="d-flex align-center ga-3 mb-4 flex-wrap">
+          <span class="text-body-2 app-muted">一次顯示 {{ PAGE_SIZE }} 筆</span>
           <v-spacer />
           <!--
             排序是這一章唯一真的用到 Ch4 那組參數的地方。
@@ -262,64 +239,77 @@ const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
           -->
           <v-btn-toggle
             v-model="order"
-            density="compact"
-            variant="outlined"
+            density="comfortable"
+            variant="flat"
+            rounded="pill"
             mandatory
+            style="background: #ffffff"
           >
             <v-btn value="desc" size="small">最新的在前</v-btn>
             <v-btn value="asc" size="small">最舊的在前</v-btn>
           </v-btn-toggle>
         </div>
 
-        <v-progress-linear v-if="listLoading" indeterminate color="primary" />
+        <v-progress-linear
+          v-if="listLoading"
+          indeterminate
+          color="primary"
+          rounded
+          class="mb-3"
+        />
 
         <v-card
           v-for="(item, i) in items"
           :key="item.id"
-          class="mb-3"
-          variant="outlined"
+          class="pa-6 mb-3"
+          style="box-shadow: var(--app-shadow)"
         >
-          <v-card-text>
-            <div class="d-flex align-center mb-3">
-              <!--
-                ⚠️ **沒有填答者。** 後端的 Response 沒有 userId（匿名填答），
-                所以這裡只有時間 —— 那是 schema 層的決定，不是這一頁漏做。
-              -->
-              <span class="text-subtitle-2">第 {{ rowNumber(i) }} 筆</span>
-              <v-spacer />
-              <span class="text-body-2 text-medium-emphasis">
-                {{ formatDateTime(item.createdAt) }}
-              </span>
-            </div>
+          <div class="d-flex align-center mb-4">
+            <!--
+              ⚠️ **沒有填答者。** 後端的 Response 沒有 userId（匿名填答），
+              所以這裡只有時間 —— 那是 schema 層的決定，不是這一頁漏做。
+            -->
+            <span
+              class="text-caption font-weight-bold px-3 py-1"
+              style="
+                border-radius: 999px;
+                background: var(--app-primary-soft);
+                color: var(--app-primary);
+              "
+            >
+              第 {{ rowNumber(i) }} 筆
+            </span>
+            <v-spacer />
+            <span class="text-body-2 app-muted">
+              {{ formatDateTime(item.createdAt) }}
+            </span>
+          </div>
 
-            <div v-for="answer in item.answers" :key="answer.id" class="mb-2">
-              <!--
-                答案身上只有 questionId，題目文字來自摘要那一支 ——
-                所以這一頁**沒有為了題目多發任何請求**。
-                對不到題目時（題目被刪掉了）顯示 id，不要讓整塊變空白。
-              -->
-              <div class="text-body-2 text-medium-emphasis">
-                {{ questionById.get(answer.questionId)?.title ?? answer.questionId }}
-              </div>
-              <div class="text-body-1">{{ answer.content }}</div>
+          <div v-for="answer in item.answers" :key="answer.id" class="mb-3">
+            <!--
+              答案身上只有 questionId，題目文字來自摘要那一支 ——
+              所以這一頁**沒有為了題目多發任何請求**。
+              對不到題目時（題目被刪掉了）顯示 id，不要讓整塊變空白。
+            -->
+            <div class="text-body-2 app-muted">
+              {{ questionById.get(answer.questionId)?.title ?? answer.questionId }}
             </div>
-          </v-card-text>
+            <div class="text-body-1 font-weight-medium">{{ answer.content }}</div>
+          </div>
         </v-card>
 
         <div
           v-if="!listLoading && items.length === 0"
-          class="text-center text-medium-emphasis py-8"
+          class="app-row pa-10 text-center app-muted"
         >
           還沒有人填寫這份問卷。
         </div>
 
         <div
           v-if="meta && meta.totalPages > 1"
-          class="d-flex align-center justify-space-between mt-4"
+          class="d-flex align-center justify-space-between mt-5"
         >
-          <span class="text-body-2 text-medium-emphasis">
-            共 {{ meta.total }} 筆
-          </span>
+          <span class="text-body-2 app-muted">共 {{ meta.total }} 筆</span>
           <v-pagination
             v-model="page"
             :length="meta.totalPages"
@@ -329,5 +319,5 @@ const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
         </div>
       </template>
     </template>
-  </v-container>
+  </AppShell>
 </template>

@@ -1,0 +1,38 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "選定的方向" },
+    { "id": "page-2", "name": "沒選的兩個" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "title": "C 柔和幾何（已實作）", "page": "page-1", "x": 0, "y": 0, "w": 1280, "h": 900 },
+    { "file": "DirectionA.dc.html", "title": "A 紙本編輯感", "page": "page-2", "x": 0, "y": 0, "w": 1280, "h": 900 },
+    { "file": "DirectionB.dc.html", "title": "B 深色資料台", "page": "page-2", "x": 1400, "y": 0, "w": 1280, "h": 900 }
+  ],
+  "annotations": [
+    {
+      "id": "chosen",
+      "x": 0,
+      "y": -280,
+      "w": 620,
+      "page": "page-1",
+      "text": "選定：C 柔和幾何。已經實作進真正的六個 Nuxt 頁面。\n\n實作時定下來的分工：\n· 設計 token（色、圓角、陰影）在 app/assets/css/app.css 的 :root\n· 元件預設值（膠囊按鈕、大圓角卡片、無陰影表面）在 plugins/vuetify.ts 的 defaults\n· 深紫頭帶抽成 components/AppShell.vue，五個登入後的頁面共用\n\n跟這張稿子的兩處差異，都是實作時才看得到的：\n1. 篩選列改成放在頭帶裡 —— 內容區要疊上來 40px，那個重疊落在一排膠囊上會變成\n   「一半紫底一半灰底」，疊上來的必須是一整塊卡片。\n2. 每一列的三個區塊給固定的 flex 基準寬 —— 動作按鈕會隨權限與狀態變成 4／3／1 個，\n   不固定的話每一列的數字會落在不同的 x。"
+    },
+    {
+      "id": "note-a",
+      "x": 0,
+      "y": 960,
+      "w": 400,
+      "page": "page-2",
+      "text": "A 紙本編輯感\n\n暖白紙底、襯線標題、單一磚紅重點色，只用細線分隔。\n安靜耐看，但第一眼的吸引力比較少。"
+    },
+    {
+      "id": "note-b",
+      "x": 1400,
+      "y": 960,
+      "w": 400,
+      "page": "page-2",
+      "text": "B 深色資料台\n\n近黑底、等寬數字、螢光綠重點色。\n結果頁會很好看，但六頁裡有兩頁是給填答者用的 —— 沒有人想在深色介面裡打字。"
+    }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

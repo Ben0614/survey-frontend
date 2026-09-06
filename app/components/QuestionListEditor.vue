@@ -85,9 +85,9 @@ const fieldError = (index: number, field: string) =>
       v-for="(q, i) in questions"
       :key="q.key"
       class="mb-3"
-      variant="outlined"
+      style="box-shadow: var(--app-shadow)"
     >
-      <v-card-title class="d-flex align-center text-subtitle-1">
+      <v-card-title class="d-flex align-center text-subtitle-1 font-weight-bold pt-4">
         第 {{ i + 1 }} 題
         <v-spacer />
         <template v-if="!readonly">
@@ -145,7 +145,7 @@ const fieldError = (index: number, field: string) =>
           （見 utils/questions.ts 的 toCreatePayload）。
         -->
         <div v-if="q.type === 'SINGLE_CHOICE'">
-          <div class="text-body-2 text-medium-emphasis mb-2">選項</div>
+          <div class="text-body-2 app-muted mb-2">選項</div>
 
           <div
             v-for="(option, j) in q.options"
@@ -197,17 +197,15 @@ const fieldError = (index: number, field: string) =>
 
     <v-btn
       v-if="!readonly"
-      variant="tonal"
+      variant="flat"
+      class="app-btn-soft"
       prepend-icon="mdi-plus"
       @click="addQuestion"
     >
       新增題目
     </v-btn>
 
-    <div
-      v-if="questions.length === 0"
-      class="text-body-2 text-medium-emphasis mt-3"
-    >
+    <div v-if="questions.length === 0" class="text-body-2 app-muted mt-3">
       這份問卷還沒有任何題目。
     </div>
   </div>

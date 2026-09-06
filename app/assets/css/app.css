@@ -1,0 +1,165 @@
+/*
+ * 全站的視覺語彙（Ch17 之後的重新設計）。
+ *
+ * 這裡只放**兩種東西**：
+ *   1. 設計 token（顏色、圓角、陰影）—— 讓「深紫」只有一個地方定義
+ *   2. Vuetify 蓋不到的地方（body 底色、字體、頭帶那塊）
+ *
+ * 元件層級的預設值（按鈕圓角、卡片圓角、輸入框樣式）**不寫在這裡**，
+ * 寫在 plugins/vuetify.ts 的 defaults —— 那是 Vuetify 提供的正規入口，
+ * 用 CSS 去覆蓋元件內部的 class 會在升版時安靜地失效。
+ */
+
+:root {
+  /* 底與面 */
+  --app-canvas: #f5f4f8;
+  --app-surface: #ffffff;
+  --app-header: #2e2a4a;
+
+  /* 文字。三階就夠了，第四階通常代表層級沒設計好 */
+  --app-ink: #1e1b2e;
+  --app-ink-soft: #4a4463;
+  --app-muted: #8b85a8;
+
+  /* 重點色。兩個，而且分工固定：
+     primary 是「頁面上的主要動作」，lime 只出現在深紫頭帶上的那一顆 */
+  --app-primary: #4f46e5;
+  --app-primary-soft: #eef2ff;
+  --app-lime: #c7f464;
+
+  /* 狀態 */
+  --app-danger: #e11d48;
+  --app-danger-soft: #fdf2f4;
+  --app-success: #166534;
+  --app-success-soft: #dcfce7;
+
+  /* 中性填色（次要按鈕、標籤底） */
+  --app-fill: #f1eff7;
+
+  --app-shadow: 0 1px 2px rgba(46, 42, 74, 0.06);
+  --app-shadow-lg: 0 8px 24px rgba(46, 42, 74, 0.1);
+}
+
+html,
+body {
+  font-family:
+    'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.v-application {
+  font-family:
+    'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--app-canvas) !important;
+  color: var(--app-ink);
+}
+
+/* ── 深紫頭帶 ─────────────────────────────────────────────
+ *
+ * 內容區用負的上邊距疊上來（見 .app-body），所以頭帶自己要留出那段
+ * 多餘的下邊距 —— 兩個數字必須一起改，因此並排放在這裡。
+ */
+.app-header {
+  background: var(--app-header);
+  color: #ffffff;
+  /* 下邊距要 >= .app-body 的負上邊距 + 一點呼吸，否則內容會蓋到篩選列。
+     兩個數字必須一起改，所以並排放。 */
+  padding: 22px 0 62px;
+}
+
+/* 頭帶裡的膠囊：在深紫上，選中的用白底深字（對比最高），
+   沒選中的用半透明白 —— 靛藍在深紫上讀不出來。 */
+.app-header .app-pill {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.app-header .app-pill--active {
+  background: #ffffff !important;
+  color: var(--app-primary) !important;
+  font-weight: 700;
+}
+
+.app-header__brand {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.app-header__title {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.app-header__subtitle {
+  font-size: 14px;
+  color: #b5afd4;
+}
+
+.app-header__muted {
+  font-size: 13px;
+  color: #b5afd4;
+}
+
+.app-body {
+  margin-top: -40px;
+}
+
+/* 頭帶上的膠囊按鈕：白底那顆在深紫上要夠淡，不能用 Vuetify 的 text 變體
+   （它會用 primary 色，在深紫上讀不出來）。 */
+.app-header .app-chip-ghost {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* ── 共用的小東西 ─────────────────────────────────────── */
+
+.app-stat {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.app-stat--muted {
+  color: #cfcbde;
+}
+
+.app-stat__label {
+  font-size: 11px;
+  color: var(--app-muted);
+}
+
+.app-muted {
+  color: var(--app-muted);
+}
+
+.app-ink-soft {
+  color: var(--app-ink-soft);
+}
+
+/* 卡片列表的一列。hover 抬一點點 —— 只有「整列可點」的地方才加。 */
+.app-row {
+  background: var(--app-surface);
+  border-radius: 20px;
+  box-shadow: var(--app-shadow);
+}
+
+/* 次要動作：灰底膠囊。Vuetify 的 tonal 變體會染上 primary 色，
+   而這裡要的是中性的，所以自己給底色。 */
+.app-btn-soft {
+  background: var(--app-fill) !important;
+  color: var(--app-ink-soft) !important;
+}
+
+.app-btn-danger-soft {
+  background: var(--app-danger-soft) !important;
+  color: var(--app-danger) !important;
+}
+
+/* 登入頁把整個 body 染成深紫（見 pages/login.vue 的 useHead）。
+   只給頁面裡那個 div 的話，內容比視窗矮時捲到底會露出一條淺灰。 */
+body.auth-page,
+body.auth-page .v-application {
+  background: var(--app-header) !important;
+}

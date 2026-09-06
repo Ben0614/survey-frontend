@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #A8442A; }
+    a:hover { color: #7C2D17; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 900px; background: #FAF7F2; font-family: 'Noto Sans TC', system-ui, sans-serif; color: #1C1917; box-sizing: border-box; padding: 56px 72px; display: flex; flex-direction: column; gap: 40px;">
+
+  <!-- 頁首 -->
+  <div style="display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid #1C1917; padding-bottom: 18px;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div style="font-size: 11px; letter-spacing: 0.24em; color: #A8442A; text-transform: uppercase;">Survey Platform</div>
+      <div style="font-family: 'Noto Serif TC', serif; font-weight: 600; font-size: 44px; line-height: 1;">問卷</div>
+    </div>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 20px; padding-bottom: 6px;">
+      <span style="font-size: 13px; color: #78716C;">nnnn@gmail.com</span>
+      <span style="font-size: 13px; color: #1C1917; border-bottom: 1px solid #A8442A; padding-bottom: 1px;">登出</span>
+    </div>
+  </div>
+
+  <!-- 分類 + 動作 -->
+  <div style="display: flex; align-items: center; gap: 32px;">
+    <div style="display: flex; gap: 28px;">
+      <span style="font-size: 15px; font-weight: 500; padding-bottom: 8px; border-bottom: 2px solid #A8442A;">全部</span>
+      <span style="font-size: 15px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid transparent;">我建立的</span>
+      <span style="font-size: 15px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid transparent;">我的草稿</span>
+      <span style="font-size: 15px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid transparent;">可以填的</span>
+    </div>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #C9C0B2; padding: 0 2px 6px 2px; width: 200px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path>
+        </svg>
+        <span style="font-size: 13px; color: #A8A29E;">搜尋標題</span>
+      </div>
+      <div style="background: #A8442A; color: #FAF7F2; font-size: 14px; font-weight: 500; padding: 11px 20px; display: flex; align-items: center; gap: 8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        新增問卷
+      </div>
+    </div>
+  </div>
+
+  <!-- 表格 -->
+  <div style="display: flex; flex-direction: column;">
+    <div style="display: grid; grid-template-columns: 1fr 96px 72px 72px 108px 200px; gap: 20px; padding: 0 4px 10px 4px; border-bottom: 1px solid #E7E0D6; font-size: 11px; letter-spacing: 0.14em; color: #A8A29E; text-transform: uppercase;">
+      <span>標題</span><span>狀態</span><span style="text-align: right;">題數</span><span style="text-align: right;">填答</span><span>建立</span><span></span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 96px 72px 72px 108px 200px; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid #E7E0D6;">
+      <span style="font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 500;">員工滿意度調查 2026</span>
+      <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #3F6212;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #65A30D;"></span>發布中</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">5</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">12</span>
+      <span style="font-size: 13px; color: #A8A29E;">08/01</span>
+      <div style="display: flex; gap: 16px; justify-content: flex-end; font-size: 13px;">
+        <span style="border-bottom: 1px solid #D6CEC0;">填寫</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">編輯</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">結果</span>
+        <span style="color: #A8442A; border-bottom: 1px solid #E3BFB4;">刪除</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 96px 72px 72px 108px 200px; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid #E7E0D6;">
+      <span style="font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 500;">公司福利制度檢討</span>
+      <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #78716C;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1px solid #A8A29E;"></span>草稿</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">3</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px; color: #D6CEC0;">0</span>
+      <span style="font-size: 13px; color: #A8A29E;">08/03</span>
+      <div style="display: flex; gap: 16px; justify-content: flex-end; font-size: 13px;">
+        <span style="border-bottom: 1px solid #D6CEC0;">編輯</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">結果</span>
+        <span style="color: #A8442A; border-bottom: 1px solid #E3BFB4;">刪除</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 96px 72px 72px 108px 200px; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid #E7E0D6;">
+      <span style="font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 500;">遠端工作意願調查</span>
+      <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #3F6212;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #65A30D;"></span>發布中</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">4</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">1</span>
+      <span style="font-size: 13px; color: #A8A29E;">08/03</span>
+      <div style="display: flex; gap: 16px; justify-content: flex-end; font-size: 13px;">
+        <span style="border-bottom: 1px solid #D6CEC0;">填寫</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">編輯</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">結果</span>
+        <span style="color: #A8442A; border-bottom: 1px solid #E3BFB4;">刪除</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 96px 72px 72px 108px 200px; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid #E7E0D6;">
+      <span style="font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 500;">新產品命名投票</span>
+      <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #3F6212;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #65A30D;"></span>發布中</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">3</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">7</span>
+      <span style="font-size: 13px; color: #A8A29E;">08/05</span>
+      <div style="display: flex; gap: 16px; justify-content: flex-end; font-size: 13px;">
+        <span style="border-bottom: 1px solid #D6CEC0;">填寫</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">編輯</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">結果</span>
+        <span style="color: #A8442A; border-bottom: 1px solid #E3BFB4;">刪除</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 96px 72px 72px 108px 200px; gap: 20px; align-items: center; padding: 20px 4px; border-bottom: 1px solid #E7E0D6;">
+      <span style="font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 500;">辦公室設備需求</span>
+      <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #78716C;"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1px solid #A8A29E;"></span>草稿</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px;">6</span>
+      <span style="text-align: right; font-family: 'Noto Serif TC', serif; font-size: 17px; color: #D6CEC0;">0</span>
+      <span style="font-size: 13px; color: #A8A29E;">08/06</span>
+      <div style="display: flex; gap: 16px; justify-content: flex-end; font-size: 13px;">
+        <span style="border-bottom: 1px solid #D6CEC0;">編輯</span>
+        <span style="border-bottom: 1px solid #D6CEC0;">結果</span>
+        <span style="color: #A8442A; border-bottom: 1px solid #E3BFB4;">刪除</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <span style="font-size: 13px; color: #A8A29E;">共 14 筆</span>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; gap: 4px; align-items: center;">
+      <span style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #1C1917; color: #FAF7F2;">1</span>
+      <span style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #78716C;">2</span>
+      <span style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #78716C;">3</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

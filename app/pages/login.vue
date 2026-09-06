@@ -1,4 +1,10 @@
 <script setup lang="ts">
+// ⚠️ 深紫要鋪到 **body**，不能只給頁面裡那個 div。
+// 那個 div 有 min-height: 100vh，但 v-application 的底色仍然在它下面 ——
+// 內容比視窗矮時，捲到底會露出一條淺灰。加一個 body class 是最小的解法，
+// 而且離開這一頁時 Nuxt 會自動把它移掉。
+useHead({ bodyAttrs: { class: 'auth-page' } })
+
 const auth = useAuthStore()
 const notification = useNotificationStore()
 
@@ -66,50 +72,93 @@ async function submit() {
 </script>
 
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row justify="center" align="center">
-      <v-col cols="12" sm="8" md="5" lg="4">
-        <v-card>
-          <v-card-title class="text-h6 pt-4">問卷平台</v-card-title>
+  <!--
+    登入頁是全站唯一**不套 AppShell** 的頁面：那個外框有登出按鈕與使用者 email，
+    而這裡還沒有使用者。所以它自己畫底 —— 整片深紫，白卡置中。
+  -->
+  <div
+    class="d-flex align-center justify-center"
+    style="min-height: 100dvh; background: var(--app-header); padding: 24px"
+  >
+    <div style="width: 100%; max-width: 420px">
+      <!-- 品牌 -->
+      <div class="d-flex align-center justify-center ga-3 mb-8">
+        <span
+          class="d-flex align-center justify-center"
+          style="
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            background: var(--app-lime);
+          "
+        >
+          <svg
+            width="19"
+            height="19"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#2E2A4A"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M4 12l5 5L20 6" />
+          </svg>
+        </span>
+        <span
+          class="text-white font-weight-black"
+          style="font-size: 22px; letter-spacing: -0.02em"
+        >
+          問卷平台
+        </span>
+      </div>
 
-          <v-tabs v-model="mode" grow>
-            <v-tab value="login" @click="switchMode('login')">登入</v-tab>
-            <v-tab value="register" @click="switchMode('register')">註冊</v-tab>
-          </v-tabs>
+      <v-card class="pa-2" style="box-shadow: var(--app-shadow-lg)">
+        <v-tabs v-model="mode" grow color="primary">
+          <v-tab value="login" @click="switchMode('login')">登入</v-tab>
+          <v-tab value="register" @click="switchMode('register')">註冊</v-tab>
+        </v-tabs>
 
-          <v-card-text>
-            <v-form ref="formRef" @submit.prevent="submit">
-              <v-text-field
-                v-model="email"
-                label="Email"
-                type="email"
-                autocomplete="email"
-                :rules="[required, emailRule]"
-                :disabled="pending"
-              />
+        <v-card-text class="pt-6 px-5 pb-5">
+          <v-form ref="formRef" @submit.prevent="submit">
+            <v-text-field
+              v-model="email"
+              label="Email"
+              type="email"
+              autocomplete="email"
+              :rules="[required, emailRule]"
+              :disabled="pending"
+            />
 
-              <v-text-field
-                v-model="password"
-                label="密碼"
-                type="password"
-                :autocomplete="isRegister ? 'new-password' : 'current-password'"
-                :rules="passwordRules"
-                :disabled="pending"
-              />
+            <v-text-field
+              v-model="password"
+              label="密碼"
+              type="password"
+              :autocomplete="isRegister ? 'new-password' : 'current-password'"
+              :rules="passwordRules"
+              :disabled="pending"
+            />
 
-              <v-btn
-                type="submit"
-                color="primary"
-                block
-                class="mt-2"
-                :loading="pending"
-              >
-                {{ isRegister ? '註冊並登入' : '登入' }}
-              </v-btn>
-            </v-form>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            <v-btn
+              type="submit"
+              color="primary"
+              size="large"
+              block
+              class="mt-2 font-weight-bold"
+              :loading="pending"
+            >
+              {{ isRegister ? '註冊並登入' : '登入' }}
+            </v-btn>
+          </v-form>
+        </v-card-text>
+      </v-card>
+
+      <div
+        class="text-center text-body-2 mt-6"
+        style="color: #b5afd4"
+      >
+        建立問卷、發布、收集填答，然後看結果。
+      </div>
+    </div>
+  </div>
 </template>
