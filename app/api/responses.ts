@@ -1,4 +1,4 @@
-import type { components } from '~/model/api/schema'
+import type { components, operations } from '~/model/api/schema'
 
 /** 送出後拿到的那一筆作答。**不含 answers** —— 後端的 create 沒有 include。 */
 export type Response = components['schemas']['ResponseEntity']
@@ -18,6 +18,27 @@ export type CreateResponseBody = components['schemas']['CreateResponseDto']
  */
 export type SurveySummary = components['schemas']['SurveySummaryEntity']
 export type QuestionSummary = components['schemas']['QuestionSummaryEntity']
+
+/**
+ * 逐筆填答（後端 Ch17 輪 ⑤b）。
+ *
+ * ⚠️ **列表回的不是 ResponseEntity。** 後端拆成兩個 entity（同輪 ① 的問卷列表）：
+ *   ResponseListItemEntity  列表用，多了 answers（**必填**）
+ *   ResponseDetailEntity    GET /responses/:id 用，answers 裡還帶著完整的 question
+ *
+ * 列表那份的 answers **刻意不含 question** —— 題目屬於問卷，不屬於每一筆填答。
+ * 帶著的話 10 筆 × 4 題 = 40 份題目文字。呼叫端拿一次題目（摘要那支已經有），
+ * 自己用 questionId 對起來。
+ */
+export type PaginatedResponses =
+  components['schemas']['PaginatedResponsesEntity']
+export type ResponseListItem =
+  components['schemas']['ResponseListItemEntity']
+
+/** `GET /surveys/:surveyId/responses` 的 query 參數，**連這個都從契約取**。 */
+export type FindResponsesQuery = NonNullable<
+  operations['SurveyResponsesController_findAll']['parameters']['query']
+>
 
 export const responsesApi = {
   /**
@@ -43,4 +64,16 @@ export const responsesApi = {
    */
   summary: (surveyId: string) =>
     useMyService.get<SurveySummary>(`/surveys/${surveyId}/responses/summary`),
+
+  /**
+   * 逐筆填答（分頁）。**只有擁有者與 ADMIN 看得到。**
+   *
+   * 這是這一章唯一真的把 Ch4 那組分頁參數用在 UI 上的地方 ——
+   * 對照 summary 那一支刻意不分頁（統計需要全部，分頁是為了不給全部）。
+   */
+  list: (surveyId: string, query: FindResponsesQuery) =>
+    useMyService.get<PaginatedResponses>(
+      `/surveys/${surveyId}/responses`,
+      query,
+    ),
 }

@@ -516,9 +516,45 @@ export interface components {
              */
             createdAt: string;
         };
+        ResponseAnswerEntity: {
+            /**
+             * @description 答案 id（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            id: string;
+            /**
+             * @description 這則答案是回答哪一題（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            questionId: string;
+            /**
+             * @description 回答的內容
+             * @example 滿意
+             */
+            content: string;
+        };
+        ResponseListItemEntity: {
+            /**
+             * @description 填寫 id（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            id: string;
+            /**
+             * @description 問卷 id（cuid）
+             * @example clx1a2b3c0000abcd1234efgh
+             */
+            surveyId: string;
+            /**
+             * Format: date-time
+             * @description 建立時間
+             */
+            createdAt: string;
+            /** @description 這一筆填答的所有答案（不含題目本身，用 questionId 去對） */
+            answers: components["schemas"]["ResponseAnswerEntity"][];
+        };
         PaginatedResponsesEntity: {
             /** @description 回傳資料 */
-            data: components["schemas"]["ResponseEntity"][];
+            data: components["schemas"]["ResponseListItemEntity"][];
             /** @description 統計資訊 */
             meta: components["schemas"]["PaginationMetaEntity"];
         };
@@ -1413,6 +1449,8 @@ export interface operations {
                 page?: number;
                 /** @description 每頁筆數 */
                 pageSize?: number;
+                /** @description 順序 */
+                order?: "asc" | "desc";
             };
             header?: never;
             path: {
