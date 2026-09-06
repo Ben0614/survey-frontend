@@ -65,7 +65,9 @@ app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $f
 
 一句話的重點：**`useMyService` 要依這個後端的錯誤約定設計**。Java/Spring 生態常見的
 `ApiResponse<T>`（HTTP 一律 2xx、靠 body 的 `code !== 0` 判斷業務錯誤）在這裡不適用，
-這個後端是相反的 **真實 HTTP 狀態碼 + `{ error: { code, message, details? } }`**。
+這個後端是相反的 **真實 HTTP 狀態碼 + `{ error: { code, message, fields? } }`**，
+而 `fields` 是結構化的 `[{ field, rule }]` —— 拿 `field` 標紅輸入框、拿 `rule` 查文案表，
+**不要直接顯示它**（`rule` 是 class-validator 的裝飾器名）。
 
 ## 串接時一定會撞到的四件事
 
