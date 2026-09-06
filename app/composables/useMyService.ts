@@ -60,7 +60,7 @@ export interface RequestOption {
   silent?: boolean
 }
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
 
 /**
  * 請求 body 的型別。用 Record 而不是 unknown —— `$fetch` 的 body 不吃 unknown。
@@ -193,6 +193,15 @@ export const useMyService = {
 
   patch: <T>(path: string, body?: RequestBody, option?: RequestOption) =>
     request<T>('PATCH', path, { body }, option),
+
+  /**
+   * PATCH 的兄弟：**整份取代**，沒給的欄位視為要清空。
+   *
+   * 後端只有一支用它（PUT /surveys/:id/questions，Ch17 輪 ③）。
+   * 兩者不能互換 —— 那支端點只註冊了 PUT，用 patch 打過去是 404。
+   */
+  put: <T>(path: string, body?: RequestBody, option?: RequestOption) =>
+    request<T>('PUT', path, { body }, option),
 
   remove: <T>(path: string, option?: RequestOption) =>
     request<T>('DELETE', path, undefined, option),

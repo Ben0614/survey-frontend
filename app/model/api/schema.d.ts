@@ -71,7 +71,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** 公開問卷 */
+        /** 公開問卷（至少要有一題） */
         patch: operations["SurveysController_publish"];
         trace?: never;
     };
@@ -101,7 +101,8 @@ export interface paths {
         };
         /** 查詢問卷所有題目 */
         get: operations["SurveysQuestionsController_findAll"];
-        put?: never;
+        /** 整份取代問卷的題目（順序即陣列順序，只有 DRAFT 能改） */
+        put: operations["SurveysQuestionsController_replace"];
         /** 建立題目 */
         post: operations["SurveysQuestionsController_create"];
         delete?: never;
@@ -409,6 +410,10 @@ export interface components {
             title?: string;
             /** @description 一併建立的題目。順序就是陣列的順序；不給就是一份空草稿 */
             questions?: components["schemas"]["CreateQuestionDto"][];
+        };
+        ReplaceQuestionsDto: {
+            /** @description 這份問卷取代後的完整題目清單。**順序就是陣列的順序**；送 [] 代表清空所有題目 */
+            questions: components["schemas"]["CreateQuestionDto"][];
         };
         UpdateQuestionDto: {
             /**
@@ -897,6 +902,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
+            /** @description 問卷沒有任何題目 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
         };
     };
     SurveysController_unpublish: {
@@ -988,6 +1002,77 @@ export interface operations {
             };
             /** @description 問卷不存在 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+        };
+    };
+    SurveysQuestionsController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                surveyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceQuestionsDto"];
+            };
+        };
+        responses: {
+            /** @description 取代後的全部題目，依 order 由小到大 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionEntity"][];
+                };
+            };
+            /** @description 參數錯誤 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 未登入，或權杖無效／已過期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 無此權限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 問卷不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 問卷已發布，或已經有人填答 */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

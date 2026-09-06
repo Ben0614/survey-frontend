@@ -26,6 +26,18 @@ export type CreateSurveyBody = components['schemas']['CreateSurveyDto']
 export type CreateQuestion = components['schemas']['CreateQuestionDto']
 export type QuestionType = CreateQuestion['type']
 
+/** 後端回來的題目（含 id / order / surveyId），對照 CreateQuestion 是「要送過去的」。 */
+export type Question = components['schemas']['QuestionEntity']
+
+/**
+ * `PATCH /surveys/:id` 的 body。
+ *
+ * ⚠️ 它是 `PartialType(CreateSurveyDto)`，所以型別上**也有 `questions`** ——
+ * 但那條路是不通的：service 的 update 只寫 `data: { title: dto.title }`，
+ * 送 questions 過去會被無聲忽略。改題目要走下面的 replaceQuestions。
+ */
+export type UpdateSurveyBody = components['schemas']['UpdateSurveyDto']
+
 /**
  * `GET /surveys` 的 query 參數。
  *
@@ -61,4 +73,37 @@ export const surveysApi = {
    * 可以拿去組訊息。
    */
   remove: (id: string) => useMyService.remove<Survey>(`/surveys/${id}`),
+
+  /**
+   * 查一份問卷，**一定帶題目**。
+   *
+   * 這裡把 `includeQuestions=true` 寫死，不做成參數：目前唯一的呼叫端是編輯頁，
+   * 而它沒有「只要標題」的情境。等真的出現第二種用法再開參數 ——
+   * 現在開等於先造一個沒人用的分支。
+   */
+  get: (id: string) =>
+    useMyService.get<Survey>(`/surveys/${id}`, { includeQuestions: true }),
+
+  /** 改問卷本身（實際上只有 title 會生效，見 UpdateSurveyBody 的說明）。 */
+  update: (id: string, body: UpdateSurveyBody) =>
+    useMyService.patch<Survey>(`/surveys/${id}`, body),
+
+  /**
+   * **整份取代**一份問卷的題目（後端 Ch17 輪 ③ 新增的）。
+   *
+   * 三件事要記得：
+   *   1. 順序就是陣列的順序 —— 後端拿 index 當 order，沒有別的排序欄位
+   *   2. 回來的題目 **id 全是新的**（舊的被刪掉重建），呼叫端必須拿回傳值
+   *      取代本地狀態，不能繼續用手上那些舊 id
+   *   3. 只有 DRAFT 能用。已發布的問卷會回 409，那是後端的規則，前端不複製
+   */
+  replaceQuestions: (id: string, questions: CreateQuestion[]) =>
+    useMyService.put<Question[]>(`/surveys/${id}/questions`, { questions }),
+
+  /** 發布。**一題都沒有會回 409**（後端 Ch17 輪 ③ 補的規則）。 */
+  publish: (id: string) => useMyService.patch<Survey>(`/surveys/${id}/publish`),
+
+  /** 撤回發布。**已經有人填答會回 409** —— 撤回之後題目就能改，舊答案會對不起來。 */
+  unpublish: (id: string) =>
+    useMyService.patch<Survey>(`/surveys/${id}/unpublish`),
 }

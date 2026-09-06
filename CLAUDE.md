@@ -47,11 +47,14 @@ pnpm typecheck                           # 綠 = 契約可用
 
 ```
 app/api/*.ts                    逐 domain 的薄封裝（一個檔案一個資源）
+app/components/*.vue            跨頁面共用的元件（Nuxt 自動 import，不必寫 import）
 app/composables/useMyService.ts 統一的 HTTP 封裝，唯一碰 $fetch 的地方
 app/model/api/schema.d.ts       ← 產的，不手寫
 app/stores/auth.ts              token（cookie）與 user（記憶體）；**唯一持有 token ref 的地方**
 app/stores/notification.ts      錯誤 toast 的唯一出口
 app/utils/auth.ts               useTokenCookie —— 只給 stores/auth.ts 用（理由見該檔頭）
+app/utils/questions.ts          DraftQuestion 與它的三個轉換（新增頁與編輯頁共用）
+app/utils/field-errors.ts       後端的 fields → 標在輸入框上的訊息
 app/middleware/auth.global.ts   全域路由守衛，publicPages 白名單
 app/plugins/vuetify.ts          createVuetify
 app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $fetch
@@ -84,8 +87,11 @@ app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $f
 
 - **Ch14 完成：能註冊、登入、reload 之後靠 `/auth/me` 還原身分、登出。**
   已有 Vuetify + Pinia + `useMyService` + 全域路由守衛。
-  `/surveys` 目前是**佔位頁**（只顯示身分與登出），**Ch17 才換成真的列表**
-  （Ch15 做的是後端的 API 設計問題，沒有動到頁面）。
+- **Ch17 進行中（一頁一輪）：`/surveys` 列表 ✅、`/surveys/new` ✅、
+  `/surveys/:id/edit` ✅、`/surveys/:id/fill` ⬜、`/surveys/:id/result` ⬜。**
+  這一章的重點不在頁面，在**做這一頁時發現 API 哪裡不好用** —— 三輪各修掉了
+  後端的 N+1、建立不是原子的、編輯不是原子的、`order` 改不了、空問卷可以發布。
+  ⚠️ **每一輪都要重跑 `pnpm gen:api`**，後端幾乎每一輪都動了契約。
 - ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
   刻意紅著一條（`ownerId` 產出 `Record<string, never>`），後端補上 `type: String`
   之後轉綠。**紅了就是契約真的變了，要查，不是「本來就紅」。**

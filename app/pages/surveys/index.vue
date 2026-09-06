@@ -214,8 +214,8 @@ async function logout() {
           />
           <v-spacer />
           <!--
-            編輯／填寫／結果那三個按鈕的目標頁面還不存在（輪 ③～⑤），仍然 disabled。
-            「新增問卷」在輪 ② 接上了 —— 每一輪拿掉一個。
+            填寫／結果兩個按鈕的目標頁面還不存在（輪 ④⑤），仍然 disabled。
+            「新增問卷」在輪 ② 接上、「編輯」在輪 ③ 接上 —— 每一輪拿掉一個。
           -->
           <v-btn color="primary" to="/surveys/new" prepend-icon="mdi-plus">
             新增問卷
@@ -258,7 +258,13 @@ async function logout() {
               >
                 填寫
               </v-btn>
-              <v-btn v-if="isMine(s)" size="small" variant="text" disabled>
+              <!-- 輪 ③ 接上。已發布的也進得去 —— 標題還是能改，題目那一半唯讀。 -->
+              <v-btn
+                v-if="isMine(s)"
+                size="small"
+                variant="text"
+                :to="`/surveys/${s.id}/edit`"
+              >
                 編輯
               </v-btn>
               <v-btn v-if="isMine(s)" size="small" variant="text" disabled>
