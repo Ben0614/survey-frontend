@@ -50,7 +50,7 @@ export interface paths {
         get: operations["SurveysController_findOne"];
         put?: never;
         post?: never;
-        /** 刪除問卷（僅限管理員） */
+        /** 刪除問卷（擁有者或管理員；已有填答則不能刪） */
         delete: operations["SurveysController_remove"];
         options?: never;
         head?: never;
@@ -378,20 +378,6 @@ export interface components {
             /** @description 建立者的 User id，尚未有值時為 null */
             ownerId: string | null;
         };
-        CreateSurveyDto: {
-            /**
-             * @description 問卷標題
-             * @example 員工滿意度調查
-             */
-            title: string;
-        };
-        UpdateSurveyDto: {
-            /**
-             * @description 問卷標題
-             * @example 員工滿意度調查
-             */
-            title?: string;
-        };
         CreateQuestionDto: {
             /**
              * @description 題目標題
@@ -403,8 +389,26 @@ export interface components {
              * @enum {string}
              */
             type: "TEXT" | "SINGLE_CHOICE";
-            /** @description 選項 */
+            /** @description 選項。SINGLE_CHOICE 至少兩個；TEXT 送空陣列 */
             options: string[];
+        };
+        CreateSurveyDto: {
+            /**
+             * @description 問卷標題
+             * @example 員工滿意度調查
+             */
+            title: string;
+            /** @description 一併建立的題目。順序就是陣列的順序；不給就是一份空草稿 */
+            questions?: components["schemas"]["CreateQuestionDto"][];
+        };
+        UpdateSurveyDto: {
+            /**
+             * @description 問卷標題
+             * @example 員工滿意度調查
+             */
+            title?: string;
+            /** @description 一併建立的題目。順序就是陣列的順序；不給就是一份空草稿 */
+            questions?: components["schemas"]["CreateQuestionDto"][];
         };
         UpdateQuestionDto: {
             /**
@@ -417,7 +421,7 @@ export interface components {
              * @enum {string}
              */
             type?: "TEXT" | "SINGLE_CHOICE";
-            /** @description 選項 */
+            /** @description 選項。SINGLE_CHOICE 至少兩個；TEXT 送空陣列 */
             options?: string[];
         };
         AnswerEntity: {
@@ -766,6 +770,15 @@ export interface operations {
             };
             /** @description 問卷不存在 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseEntity"];
+                };
+            };
+            /** @description 問卷已被填寫，無法刪除 */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -15,13 +15,18 @@ const isRegister = computed(() => mode.value === 'register')
 const required = (v: string) => !!v || '必填'
 const emailRule = (v: string) => /.+@.+\..+/.test(v) || 'Email 格式不正確'
 
-// ⚠️ 這兩條規則是**硬寫的**，因為契約沒講。
-// 後端 RegisterDto 有 @MinLength(8) / @MaxLength(72)（72 是 bcrypt 的硬上限），
-// 但 @ApiProperty 沒有標 minLength / maxLength，所以 schema.d.ts 裡的 password
-// 只是一個沒有任何約束的 string。
+// ⚠️ 這兩條規則是**硬寫的**，而且**即使契約補齊了也還是要硬寫**。
 //
-// 硬寫的規則會跟後端漂移而沒有人知道 —— 這正是這個專案不手寫型別的理由，
-// 而它在「驗證規則」這一層還沒有被解決。應該回頭把規則補進 @ApiProperty。
+// 後端 Ch15 輪 ② 已經把 @MinLength(8) / @MaxLength(72)（72 是 bcrypt 的硬上限）
+// 補進 @ApiProperty 了，所以 /docs 現在看得到、IDE hover 也看得到 ——
+// 但 `openapi-typescript` **不會把 minLength 產進 TypeScript 型別**
+//（TS 沒有「最短 8 字的字串」這種型別，連 JSDoc 都不會有）。
+//
+// 所以這是兩份規則，而它們可能漂移。那不是還沒解決的技術債，是分工：
+//   前端這份  UX —— 打字的當下就給回饋，不必等一次往返
+//   後端那份  防守 —— 有人繞過前端時擋下來
+// 表單驗證本來就該兩邊各一份。契約補齊換到的是「硬寫時有依據可以對照」，
+// 不是「硬寫會消失」。（同樣的說明見 pages/surveys/new.vue。）
 const minLen = (v: string) => v.length >= 8 || '密碼至少 8 個字'
 const maxLen = (v: string) => v.length <= 72 || '密碼最多 72 個字'
 

@@ -2,6 +2,11 @@
 /**
  * 問卷列表（Ch17 輪 ①）。
  *
+ * ⚠️ 檔案在輪 ② 從 `pages/surveys.vue` 搬到 `pages/surveys/index.vue`。
+ * 那不是整理，是 Nuxt 的路由規則：`surveys.vue` 與 `surveys/new.vue` 並存時，
+ * 前者會變成後者的**父層 layout**（必須放 `<NuxtPage/>`，否則子頁面畫不出來），
+ * 而 `/surveys` 也就不再是這個列表了。放進資料夾當 index 才是兩個平行的頁面。
+ *
  * 這一頁是這一章的第一個「真的在用 API」的頁面，而它一開工就撞到一個
  * e2e 全綠也抓不到的問題：**列表要顯示「幾題／幾份填答」，而 API 不給。**
  * 前端唯一能拿到的方式是對每一筆再打兩次（十筆 = 二十一次往返）——
@@ -209,11 +214,10 @@ async function logout() {
           />
           <v-spacer />
           <!--
-            這四個按鈕的目標頁面還不存在（輪 ②～⑤ 才做），所以先 disabled。
-            寫在這裡而不是之後再補，是為了讓版面現在就定案 ——
-            每一輪只要拿掉一個 disabled。
+            編輯／填寫／結果那三個按鈕的目標頁面還不存在（輪 ③～⑤），仍然 disabled。
+            「新增問卷」在輪 ② 接上了 —— 每一輪拿掉一個。
           -->
-          <v-btn color="primary" disabled prepend-icon="mdi-plus">
+          <v-btn color="primary" to="/surveys/new" prepend-icon="mdi-plus">
             新增問卷
           </v-btn>
         </div>
@@ -260,11 +264,25 @@ async function logout() {
               <v-btn v-if="isMine(s)" size="small" variant="text" disabled>
                 結果
               </v-btn>
-              <!-- 刪除是這一頁唯一真的會發請求的動作。
-                   後端 @Roles(Role.ADMIN)，所以非 ADMIN 連按鈕都不該看到 ——
-                   但那只是 UI，真正擋下來的是後端（前端藏起來不算安全措施）。 -->
+              <!--
+                刪除是這一頁唯一真的會發請求的動作。
+
+                ⚠️ **這個條件必須跟後端的 canManageSurvey 一致，而沒有任何工具
+                會在它們不一致時叫。** 輪 ① 寫的是 v-if="auth.isAdmin"（當時後端是
+                @Roles(Role.ADMIN)）；輪 ② 後端放寬成「擁有者或 ADMIN」，
+                **而這一行留在原地** —— 於是擁有者看不到自己問卷的刪除鈕。
+                tsc 不會紅、契約 diff 也看不出來：**型別能從契約產，權限規則不能。**
+
+                另一件事沒變：藏起來只是 UI。真正擋下來的是後端（403）。
+
+                「有人填答就不能刪」那條規則**刻意不複製到這裡** ——
+                按鈕照樣出現，按下去由後端回 409，useMyService 會把它的訊息
+                跳成 toast（CONFLICT 走 notification 的 default 分支）。
+                前端每複製一條後端規則，就多一個會安靜過期的地方，而上面那段
+                就是它過期的樣子。
+              -->
               <v-btn
-                v-if="auth.isAdmin"
+                v-if="isMine(s) || auth.isAdmin"
                 size="small"
                 variant="text"
                 color="error"
@@ -303,12 +321,15 @@ async function logout() {
       <v-card>
         <v-card-title class="text-h6">刪除問卷</v-card-title>
         <v-card-text>
+          <!--
+            這裡原本有一段「已經有 N 份填答，會一起被刪掉」的警告。
+            輪 ② 之後那句話是**假的** —— 後端改成有填答就回 409、不刪。
+
+            整段拿掉而不是改文字：它存在的唯一目的是陳述一個後果，
+            而那個後果現在由後端決定。改成「可能無法刪除」就是把規則
+            複製回前端，正是上面那個 v-if 剛剛踩過的坑。
+          -->
           確定要刪除「{{ target?.title }}」嗎？
-          <template v-if="target && target.responseCount > 0">
-            <v-alert type="warning" variant="tonal" density="compact" class="mt-3">
-              這份問卷已經有 {{ target.responseCount }} 份填答，會一起被刪掉。
-            </v-alert>
-          </template>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
