@@ -88,10 +88,13 @@ app/pages/*.vue                 頁面，只組合上面這些，不直接碰 $f
 - **Ch14 完成：能註冊、登入、reload 之後靠 `/auth/me` 還原身分、登出。**
   已有 Vuetify + Pinia + `useMyService` + 全域路由守衛。
 - **Ch17 進行中（一頁一輪）：`/surveys` 列表 ✅、`/surveys/new` ✅、
-  `/surveys/:id/edit` ✅、`/surveys/:id/fill` ⬜、`/surveys/:id/result` ⬜。**
-  這一章的重點不在頁面，在**做這一頁時發現 API 哪裡不好用** —— 三輪各修掉了
-  後端的 N+1、建立不是原子的、編輯不是原子的、`order` 改不了、空問卷可以發布。
+  `/surveys/:id/edit` ✅、`/surveys/:id/fill` ✅、`/surveys/:id/result` ⬜。**
+  這一章的重點不在頁面，在**做這一頁時發現 API 哪裡不好用** —— 四輪各修掉了
+  後端的 N+1、建立不是原子的、編輯不是原子的、`order` 改不了、空問卷可以發布、
+  只答一題也能送出、單選答案不必是選項之一。
   ⚠️ **每一輪都要重跑 `pnpm gen:api`**，後端幾乎每一輪都動了契約。
+- ⚠️ **填答是匿名的**（後端沒有 `Response.userId`），所以做不到「你已經填過了」，
+  也擋不住同一個人送一百次。那是 schema 變更，記在後端的 `LEARNING.md`。
 - ✅ **`pnpm typecheck` 現在是綠的（exit 0）。** 它在 Ch13 開工到輪 ① 之間
   刻意紅著一條（`ownerId` 產出 `Record<string, never>`），後端補上 `type: String`
   之後轉綠。**紅了就是契約真的變了，要查，不是「本來就紅」。**

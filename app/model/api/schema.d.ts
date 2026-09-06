@@ -1418,7 +1418,7 @@ export interface operations {
                     "application/json": components["schemas"]["ResponseEntity"];
                 };
             };
-            /** @description 請求內容不合法：欄位驗證失敗、題目 ID 重複、或題目不屬於這份問卷 */
+            /** @description 請求內容不合法：欄位驗證失敗、題目 ID 重複、題目不屬於這份問卷、沒有答完全部題目、或單選題的答案不在選項裡 */
             400: {
                 headers: {
                     [name: string]: unknown;

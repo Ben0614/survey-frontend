@@ -214,8 +214,8 @@ async function logout() {
           />
           <v-spacer />
           <!--
-            填寫／結果兩個按鈕的目標頁面還不存在（輪 ④⑤），仍然 disabled。
-            「新增問卷」在輪 ② 接上、「編輯」在輪 ③ 接上 —— 每一輪拿掉一個。
+            只剩「結果」的目標頁面還不存在（輪 ⑤），仍然 disabled。
+            新增問卷（輪 ②）、編輯（輪 ③）、填寫（輪 ④）—— 每一輪拿掉一個。
           -->
           <v-btn color="primary" to="/surveys/new" prepend-icon="mdi-plus">
             新增問卷
@@ -250,11 +250,12 @@ async function logout() {
             <td class="text-right">{{ s.responseCount }}</td>
             <td class="text-medium-emphasis">{{ formatDate(s.createdAt) }}</td>
             <td class="text-right">
+              <!-- 輪 ④ 接上。已發布才出現 —— 草稿送出去後端會回 409。 -->
               <v-btn
                 v-if="s.status === 'PUBLISHED'"
                 size="small"
                 variant="text"
-                disabled
+                :to="`/surveys/${s.id}/fill`"
               >
                 填寫
               </v-btn>
