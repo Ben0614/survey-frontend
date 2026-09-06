@@ -5,6 +5,8 @@
 // 而且離開這一頁時 Nuxt 會自動把它移掉。
 useHead({ bodyAttrs: { class: 'auth-page' } })
 
+import type { ApiError } from '~/composables/useMyService'
+
 const auth = useAuthStore()
 const notification = useNotificationStore()
 
@@ -17,6 +19,49 @@ const pending = ref(false)
 const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 
 const isRegister = computed(() => mode.value === 'register')
+
+/**
+ * 這一頁自己顯示的錯誤 —— **刻意不用 toast**。
+ *
+ * `/auth/login` 與 `/auth/register` 是 silent 的（見 api/auth.ts），
+ * 所以 useMyService 不會幫它們跳 toast，訊息由這裡決定。
+ *
+ * 兩個理由讓它留在表單裡：使用者的視線就在這裡，而且它不該四秒後自己消失 ——
+ * 「密碼打錯了」是要看著改的東西，不是一則通知。
+ */
+const formError = ref('')
+
+// 動了任何一格就把錯誤清掉。留著的話，使用者已經在改了畫面卻還在罵他。
+watch([email, password, mode], () => {
+  formError.value = ''
+})
+
+/**
+ * 後端的錯誤 → 一句人看得懂的話。
+ *
+ * 一律看 `code` 不解析 `message`（同 stores/notification.ts 的理由：
+ * message 會隨版本變動，code 是契約的一部分）。
+ * 只有最後那個 fallback 用 message —— 那是「沒預期到的錯誤」，
+ * 顯示後端說了什麼比顯示「發生錯誤」有用。
+ */
+function authMessage(error: ApiError | null, action: Mode): string {
+  switch (error?.code) {
+    case 'UNAUTHORIZED':
+      // 只會出現在登入。後端對「帳號不存在」與「密碼錯」回一模一樣的東西
+      //（防止用登入端點列舉哪些 email 註冊過），所以這裡也不分辨。
+      return 'Email 或密碼不正確'
+    case 'CONFLICT':
+      // 只會出現在註冊。後端的 fields 明確指出是 email（rule: unique），
+      // 而它的 message 是通用的「資料已存在」—— 那句話對使用者太含糊。
+      return '這個 Email 已經註冊過了'
+    case 'VALIDATION_FAILED':
+      return '輸入的內容不正確，請檢查後再送出'
+    case 'NETWORK_ERROR':
+      return error.message
+    default:
+      return error?.message ?? (action === 'register' ? '註冊失敗' : '登入失敗')
+  }
+}
 
 const required = (v: string) => !!v || '必填'
 const emailRule = (v: string) => /.+@.+\..+/.test(v) || 'Email 格式不正確'
@@ -49,21 +94,28 @@ async function submit() {
   const result = await formRef.value?.validate()
   if (!result?.valid) return
 
+  formError.value = ''
   pending.value = true
+
   try {
     const body = { email: email.value, password: password.value }
 
     if (isRegister.value) {
       // 註冊只建立帳號、不發 token（後端刻意分成兩支端點），所以要接著登入一次。
       const registered = await auth.register(body)
-      if (!registered) return
+      if (!registered.ok) {
+        formError.value = authMessage(registered.error, 'register')
+        return
+      }
       notification.success('註冊成功，正在登入')
     }
 
     const loggedIn = await auth.login(body)
-    if (!loggedIn) return
+    if (!loggedIn.ok) {
+      formError.value = authMessage(loggedIn.error, mode.value)
+      return
+    }
 
-    // 失敗時不在這裡跳 toast —— useMyService 已經跳過了（見 stores/notification.ts）。
     await navigateTo('/surveys')
   } finally {
     pending.value = false
@@ -138,6 +190,19 @@ async function submit() {
               :rules="passwordRules"
               :disabled="pending"
             />
+
+            <!--
+              錯誤顯示在送出鈕**上面**而不是下面：按鈕在視線終點，
+              訊息放在它前面才會在按下去之前被讀到。
+            -->
+            <v-alert
+              v-if="formError"
+              type="error"
+              density="compact"
+              class="mb-3"
+            >
+              {{ formError }}
+            </v-alert>
 
             <v-btn
               type="submit"

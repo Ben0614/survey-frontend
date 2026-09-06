@@ -58,6 +58,28 @@ export interface RequestOption {
    * 以及批次操作（十個請求失敗就跳十次 toast，該由呼叫端彙整成一句）。
    */
   silent?: boolean
+
+  /**
+   * 這支端點**不需要票**（目前只有 `/auth/login` 與 `/auth/register`）。
+   *
+   * 它改變的是「**401 代表什麼**」：
+   *
+   *   帶票的請求收到 401   票沒用了     → 清掉 session、導回登入頁
+   *   不帶票的請求收到 401 這次帳密不對 → **跟現有的 session 無關**
+   *
+   * 少了這個旗標的症狀有兩層，而且第二層看不見（實際發生過，2026-09-06）：
+   *   看得見的  沒登入過的人被告知「登入逾時，請重新登入」——
+   *             他從來沒登入過，沒有東西可以逾時
+   *   看不見的  已登入的人走到 /login 想換帳號、打錯一次密碼 →
+   *             **原本那個好好的 session 被清掉了**
+   *
+   * ⚠️ **不能用 `silent` 代替。** 底下的 clearSession 刻意**不看** silent ——
+   * 路由守衛用的就是 `fetchMe({ silent: true })`，而它**需要**那個 clearSession
+   *（進站時票過期要清掉）。兩個旗標各管一件事：
+   *   silent     錯誤要不要由這裡跳 toast、要不要導頁
+   *   anonymous  這個 401 算不算「session 壞了」
+   */
+  anonymous?: boolean
 }
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
@@ -156,7 +178,13 @@ async function request<T>(
 
     // 401 是唯一有「通用處置」的狀態碼：票已經沒用了，清掉並回登入頁。
     // 它的三種來源（沒帶票／票無效／那個人已被刪）對外一模一樣，前端不必分辨。
-    if (error.code === 'UNAUTHORIZED') {
+    //
+    // ⚠️ **但那個假設只在「帶票去要資源」的請求上成立。**
+    // /auth/login 是「去換一張票」，它的 401 意思是「帳密不對」——
+    // 清掉 session 等於因為別人打錯密碼而把自己登出（見 RequestOption.anonymous）。
+    const sessionRelevant = error.code === 'UNAUTHORIZED' && !option.anonymous
+
+    if (sessionRelevant) {
       auth.clearSession()
     }
 
@@ -170,7 +198,7 @@ async function request<T>(
     // 少了這兩個條件，同一次失敗會有兩個地方同時要導頁。
     // 用開頭取好的 router 而不是 navigateTo —— 同樣的理由：
     // navigateTo 需要 Nuxt context，而這裡已經在 await 之後了。
-    if (error.code === 'UNAUTHORIZED' && import.meta.client && !option.silent) {
+    if (sessionRelevant && import.meta.client && !option.silent) {
       await router.push('/login')
     }
   }
