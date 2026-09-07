@@ -185,6 +185,34 @@ const formatDate = (iso: string) => dateFormat.format(new Date(iso))
 const isMine = (s: SurveyListItem) =>
   s.ownerId !== null && s.ownerId === auth.user?.id
 
+// ⚠️ **這個判準必須跟後端的 canManageSurvey 一致，而沒有任何工具會在它們
+// 不一致時叫。**（survey.rules.ts:120 —— `ownerId === user.id || role === ADMIN`）
+//
+// **名字刻意跟後端取成一樣的**：改那條後端規則的人 grep 得到這一處。
+// 那是目前唯一能連結兩個 repo 的機制 —— 型別能從契約產，權限規則不能。
+//
+// 這個漂移已經發生三次，而**每一次都是「同一個判準各寫一次」造成的**：
+//   輪 ①  寫 v-if="auth.isAdmin"（當時後端是 @Roles(Role.ADMIN)）
+//   輪 ②  後端放寬成「擁有者或 ADMIN」，**只修好了刪除那一行**
+//         → 擁有者看不到自己問卷的刪除鈕
+//   本輪  編輯與結果留在 isMine(s) → **ADMIN 看不到別人問卷的編輯與結果鈕**
+//         而它是「有人真的建了第一個 ADMIN 去用」才撞出來的，
+//         tsc 綠、契約 diff 也看不出來（e2e 全綠也抓不到「不好用」）。
+// 所以這次不再逐一修那幾行，改成三個按鈕共用這一個函式。
+//
+// ⚠️ **它跟後端判斷的 role 不同源，兩者可能不一致：**
+//   這裡     auth.isAdmin ← /auth/me ← 查資料庫      （現在的值）
+//   後端     canManageSurvey ← JWT payload           （簽發當下的快照）
+// 剛被升成 ADMIN 但還沒重新登入的人：按鈕會出現，而後端一律回 403。
+// 那是後端 LEARNING.md「留給之後的事」第 4 條，本輪不處理。
+//
+// 另外兩件事沒有變：
+//   1. **藏起來只是 UI。** 真正擋下來的是後端（403）。
+//   2. 「有人填答就不能刪」「一題都沒有不能發布」那類規則**刻意不複製到前端** ——
+//      按鈕照樣出現，按下去由後端回 409，useMyService 把訊息跳成 toast
+//      （CONFLICT 走 notification 的 default 分支）。
+const canManageSurvey = (s: SurveyListItem) => isMine(s) || auth.isAdmin
+
 // ── 刪除 ──────────────────────────────────────────────────
 //
 // 用 v-dialog 而不是原生的 confirm()：原生對話框會凍住整個分頁
@@ -353,7 +381,7 @@ async function remove() {
             填寫
           </v-btn>
           <v-btn
-            v-if="isMine(s)"
+            v-if="canManageSurvey(s)"
             size="small"
             variant="flat"
             class="app-btn-soft"
@@ -362,7 +390,7 @@ async function remove() {
             編輯
           </v-btn>
           <v-btn
-            v-if="isMine(s)"
+            v-if="canManageSurvey(s)"
             size="small"
             variant="flat"
             color="primary"
@@ -370,21 +398,10 @@ async function remove() {
           >
             結果
           </v-btn>
-          <!--
-            ⚠️ **這個條件必須跟後端的 canManageSurvey 一致，而沒有任何工具
-            會在它們不一致時叫。** 輪 ① 寫的是 v-if="auth.isAdmin"（當時後端是
-            @Roles(Role.ADMIN)）；輪 ② 後端放寬成「擁有者或 ADMIN」，
-            **而這一行留在原地** —— 於是擁有者看不到自己問卷的刪除鈕。
-            tsc 不會紅、契約 diff 也看不出來：**型別能從契約產，權限規則不能。**
-
-            另一件事沒變：藏起來只是 UI。真正擋下來的是後端（403）。
-
-            「有人填答就不能刪」那條規則**刻意不複製到這裡** ——
-            按鈕照樣出現，按下去由後端回 409，useMyService 會把它的訊息
-            跳成 toast（CONFLICT 走 notification 的 default 分支）。
-          -->
+          <!-- 條件、它為什麼是共用的、以及「有人填答會回 409」都寫在
+               canManageSurvey 上方，不在這裡留第二份。 -->
           <v-btn
-            v-if="isMine(s) || auth.isAdmin"
+            v-if="canManageSurvey(s)"
             icon="mdi-trash-can-outline"
             size="small"
             variant="flat"
