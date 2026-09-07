@@ -40,6 +40,19 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
+        // favicon 三件套（public/ 底下，Nuxt 會原樣複製到網站根目錄）。
+        //
+        // 為什麼是三個檔而不是一個：
+        //   .svg   現代瀏覽器優先用它 —— 向量，高 DPI 螢幕與大尺寸都不糊
+        //   .ico   舊瀏覽器與 Windows 工作列的退路（32x32）
+        //   .png   iOS「加到主畫面」用的（180x180），沒有它會抓網頁截圖
+        //
+        // ⚠️ 順序有意義：瀏覽器取**最後一個看得懂**的 icon 宣告，
+        // 所以 .svg 要放在 .ico 後面，否則支援 svg 的瀏覽器仍然會用 .ico。
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         {
           rel: 'preconnect',

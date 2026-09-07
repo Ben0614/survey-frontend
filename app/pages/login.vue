@@ -3,7 +3,7 @@
 // 那個 div 有 min-height: 100vh，但 v-application 的底色仍然在它下面 ——
 // 內容比視窗矮時，捲到底會露出一條淺灰。加一個 body class 是最小的解法，
 // 而且離開這一頁時 Nuxt 會自動把它移掉。
-useHead({ bodyAttrs: { class: 'auth-page' } })
+useHead({ title: '登入', bodyAttrs: { class: 'auth-page' } })
 
 import type { ApiError } from '~/composables/useMyService'
 

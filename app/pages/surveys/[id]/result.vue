@@ -1,4 +1,6 @@
 <script setup lang="ts">
+useHead({ title: '填答結果' })
+
 /**
  * 填答結果(Ch17 輪 ⑤)。兩個分頁,而它們正好是這一章命題的兩半:
  *

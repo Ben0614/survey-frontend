@@ -1,4 +1,6 @@
 <script setup lang="ts">
+useHead({ title: '新增問卷' })
+
 /**
  * 新增問卷（Ch17 輪 ②）。
  *

@@ -1,4 +1,14 @@
 <script setup lang="ts">
+// 分頁標題的樣板。各頁自己 useHead({ title: '...' })，這裡負責接上站名。
+//
+// ⚠️ **寫成函式是必要的，而且因此不能放 nuxt.config。**
+// 字串樣板 '%s · 問卷平台' 在「這一頁沒給標題」時會產出
+// 「 · 問卷平台」（前面掛一個孤兒分隔號）；而 nuxt.config 的 head
+// 會被序列化進 build 產物，放不了函式 —— 所以樣板只能寫在這裡。
+useHead({
+  titleTemplate: (title) => (title ? `${title} · 問卷平台` : '問卷平台'),
+})
+
 const notification = useNotificationStore()
 </script>
 
