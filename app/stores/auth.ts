@@ -28,7 +28,14 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserEntity | null>(null)
 
   const isLoggedIn = computed(() => user.value !== null)
-  const isAdmin = computed(() => user.value?.role === 'ADMIN')
+
+  // ⚠️ **這裡刻意沒有 `isAdmin`。**
+  //
+  // 它原本有，而它就是「ADMIN 看不到別人問卷的編輯鈕」那個 bug 的來源：
+  // 畫面上要問的從來不是「我是不是 ADMIN」，是**「這份問卷我能不能管」** ——
+  // 而後者的判準是「擁有者 **或** ADMIN」。把 isAdmin 留在這裡等於留著一個
+  // 很好按、但答錯問題的捷徑。要問就問 `canManageSurvey()`
+  //（`~/utils/permissions.ts`，那裡有完整的三次漂移紀錄）。
 
   /**
    * 用手上的 token 換回身分。
@@ -84,7 +91,6 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isLoggedIn,
-    isAdmin,
     fetchMe,
     login,
     register,

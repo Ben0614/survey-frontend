@@ -138,11 +138,25 @@ body {
   color: var(--app-ink-soft);
 }
 
-/* 卡片列表的一列。hover 抬一點點 —— 只有「整列可點」的地方才加。 */
+/* 卡片列表的一列。**沒有 hover 效果**，因為整列不可點：
+   一列裡面有四顆按鈕，整列可點會讓「我想按刪除」跟「我想看內容」
+   落在同一個目標上。可點的只有下面那個標題。 */
 .app-row {
   background: var(--app-surface);
   border-radius: 20px;
   box-shadow: var(--app-shadow);
+}
+
+/* 列表列的標題是連結 → /surveys/:id（唯讀詳情頁）。
+   顏色繼承、沒有底線，所以平常看起來就是標題；hover 才變成主色，
+   用來告訴人「這裡可以點」—— 它是非擁有者唯一能看到題目的入口。 */
+.app-row__title {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-row__title:hover .text-h6 {
+  color: var(--app-primary);
 }
 
 /* 次要動作：灰底膠囊。Vuetify 的 tonal 變體會染上 primary 色，

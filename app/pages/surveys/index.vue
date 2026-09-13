@@ -29,7 +29,7 @@ useHead({ title: '問卷列表' })
  * 卡片列的代價是一頁看得到的列數變少，換到的是每一列的層級更清楚
  *（標題最大、數字次之、動作最輕），而這一頁的動作有四個。
  */
-import type { FindSurveysQuery, SurveyListItem, SurveyStatus } from '~/api/surveys'
+import type { FindSurveysQuery, SurveyListItem } from '~/api/surveys'
 
 const auth = useAuthStore()
 const notification = useNotificationStore()
@@ -152,23 +152,9 @@ const meta = computed(() => data.value?.meta ?? null)
 
 // ── 顯示用的小工具 ────────────────────────────────────────
 //
-// 用 Record<SurveyStatus, …> 而不是 switch：後端哪天在 enum 加一個狀態，
-// 契約重產之後**這裡會編譯不過**，而不是安靜地顯示一個空白標籤。
-// 型別從契約來，所以這個保護是免費的。
-const STATUS_LABEL: Record<SurveyStatus, string> = {
-  DRAFT: '草稿',
-  PUBLISHED: '發布中',
-}
-
-// 狀態標籤用自訂的底色／文字色，而不是 Vuetify 的 color 名稱：
-// 這一版要的是低飽和的柔和標籤（淡綠底＋深綠字），
-// 而 color="success" 會給整塊實心綠，在白卡上太搶。
-const STATUS_STYLE: Record<SurveyStatus, string> = {
-  DRAFT: 'background: var(--app-fill); color: var(--app-ink-soft);',
-  PUBLISHED:
-    'background: var(--app-success-soft); color: var(--app-success);',
-}
-
+// 狀態標籤（文字 + 配色）在 `<SurveyStatusChip>` 裡 —— 詳情頁也要顯示同一件事，
+// 而標籤與配色是一對，兩頁各一份的話遲早會有一頁寫「未發布」、另一頁寫「草稿」。
+//
 // ⚠️ 日期一定要指定時區，否則 SSR 會有 hydration mismatch：
 // 伺服器（部署後多半是 UTC）與瀏覽器（使用者本機）算出來的字串不一樣，
 // Vue 會在 console 抱怨「text content did not match」然後整塊重畫。
@@ -181,39 +167,19 @@ const dateFormat = new Intl.DateTimeFormat('zh-TW', {
 })
 const formatDate = (iso: string) => dateFormat.format(new Date(iso))
 
-// ownerId 可能是 null（Ch10 之前建的資料沒有擁有者），所以不能只比對相等 ——
-// user 還沒載入時 auth.user?.id 也是 undefined，null === undefined 是 false，
-// 但寫清楚比依賴那個巧合好。
-const isMine = (s: SurveyListItem) =>
-  s.ownerId !== null && s.ownerId === auth.user?.id
-
-// ⚠️ **這個判準必須跟後端的 canManageSurvey 一致，而沒有任何工具會在它們
-// 不一致時叫。**（survey.rules.ts:120 —— `ownerId === user.id || role === ADMIN`）
+// 「能不能管這一份」的判準在 `~/utils/permissions.ts`，**這裡不重寫一份**。
 //
-// **名字刻意跟後端取成一樣的**：改那條後端規則的人 grep 得到這一處。
-// 那是目前唯一能連結兩個 repo 的機制 —— 型別能從契約產，權限規則不能。
+// 它原本是這個檔案裡的兩個區域函式。搬出去的原因不是為了這一頁變短，是
+// `/surveys/:id`（唯讀詳情頁）也要問同一個問題 —— 而這個判準在這個 repo
+// **已經漂移過三次，每一次都是「同一個判準各寫一次」造成的**（完整的三次紀錄、
+// 它跟後端 `survey.rules.ts` 的對應關係、以及 role 不同源的那個坑，都寫在那個檔案）。
 //
-// 這個漂移已經發生三次，而**每一次都是「同一個判準各寫一次」造成的**：
-//   輪 ①  寫 v-if="auth.isAdmin"（當時後端是 @Roles(Role.ADMIN)）
-//   輪 ②  後端放寬成「擁有者或 ADMIN」，**只修好了刪除那一行**
-//         → 擁有者看不到自己問卷的刪除鈕
-//   本輪  編輯與結果留在 isMine(s) → **ADMIN 看不到別人問卷的編輯與結果鈕**
-//         而它是「有人真的建了第一個 ADMIN 去用」才撞出來的，
-//         tsc 綠、契約 diff 也看不出來（e2e 全綠也抓不到「不好用」）。
-// 所以這次不再逐一修那幾行，改成三個按鈕共用這一個函式。
-//
-// ⚠️ **它跟後端判斷的 role 不同源，兩者可能不一致：**
-//   這裡     auth.isAdmin ← /auth/me ← 查資料庫      （現在的值）
-//   後端     canManageSurvey ← JWT payload           （簽發當下的快照）
-// 剛被升成 ADMIN 但還沒重新登入的人：按鈕會出現，而後端一律回 403。
-// 那是後端 LEARNING.md「留給之後的事」第 4 條，本輪不處理。
-//
-// 另外兩件事沒有變：
+// 這一頁要知道的只剩兩件沒有變的事：
 //   1. **藏起來只是 UI。** 真正擋下來的是後端（403）。
 //   2. 「有人填答就不能刪」「一題都沒有不能發布」那類規則**刻意不複製到前端** ——
 //      按鈕照樣出現，按下去由後端回 409，useMyService 把訊息跳成 toast
 //      （CONFLICT 走 notification 的 default 分支）。
-const canManageSurvey = (s: SurveyListItem) => isMine(s) || auth.isAdmin
+const canManage = (s: SurveyListItem) => canManageSurvey(s.ownerId, auth.user)
 
 // ── 刪除 ──────────────────────────────────────────────────
 //
@@ -338,17 +304,19 @@ async function remove() {
           不固定寬度的話每一列的數字會落在不同的 x —— 掃視時很明顯。
         -->
         <div style="flex: 1 1 240px; min-width: 0">
-          <div class="text-h6 font-weight-bold" style="line-height: 1.3">
-            {{ s.title }}
-          </div>
+          <!--
+            ⚠️ **標題本身就是「看內容」的入口**，不是第五顆按鈕 ——
+            動作欄已經 flex: 0 0 320px 擠了四個，再加一顆就換行了。
+            而在補上詳情頁之前，非擁有者**根本沒有任何入口**可以看題目
+            （唯一能看到題目的「填寫」是填答表單，點下去就在作答）。
+          -->
+          <NuxtLink :to="`/surveys/${s.id}`" class="app-row__title">
+            <div class="text-h6 font-weight-bold" style="line-height: 1.3">
+              {{ s.title }}
+            </div>
+          </NuxtLink>
           <div class="d-flex align-center ga-3 mt-2">
-            <span
-              class="text-caption font-weight-bold px-3 py-1"
-              style="border-radius: 999px"
-              :style="STATUS_STYLE[s.status]"
-            >
-              {{ STATUS_LABEL[s.status] }}
-            </span>
+            <SurveyStatusChip :status="s.status" />
             <span class="text-body-2 app-muted">{{ formatDate(s.createdAt) }}</span>
           </div>
         </div>
@@ -383,7 +351,7 @@ async function remove() {
             填寫
           </v-btn>
           <v-btn
-            v-if="canManageSurvey(s)"
+            v-if="canManage(s)"
             size="small"
             variant="flat"
             class="app-btn-soft"
@@ -392,7 +360,7 @@ async function remove() {
             編輯
           </v-btn>
           <v-btn
-            v-if="canManageSurvey(s)"
+            v-if="canManage(s)"
             size="small"
             variant="flat"
             color="primary"
@@ -400,10 +368,10 @@ async function remove() {
           >
             結果
           </v-btn>
-          <!-- 條件、它為什麼是共用的、以及「有人填答會回 409」都寫在
-               canManageSurvey 上方，不在這裡留第二份。 -->
+          <!-- 條件、它為什麼只有一份、以及「有人填答會回 409」都寫在
+               canManage 上方，不在這裡留第二份。 -->
           <v-btn
-            v-if="canManageSurvey(s)"
+            v-if="canManage(s)"
             icon="mdi-trash-can-outline"
             size="small"
             variant="flat"
