@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { LoginDto, RegisterDto, UserEntity } from '~/api/auth'
+import type { LoginBody, RegisterBody, User } from '~/api/auth'
 import type { ApiError, RequestOption } from '~/composables/useMyService'
 
 /**
@@ -25,7 +25,7 @@ export interface AuthResult {
  */
 export const useAuthStore = defineStore('auth', () => {
   const token = useTokenCookie()
-  const user = ref<UserEntity | null>(null)
+  const user = ref<User | null>(null)
 
   const isLoggedIn = computed(() => user.value !== null)
 
@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
    *（見 api/auth.ts）—— **沒有人幫它跳 toast**，而 401 與 409 要顯示不同的話，
    * 所以錯誤必須交回給呼叫端。
    */
-  async function login(body: LoginDto): Promise<AuthResult> {
+  async function login(body: LoginBody): Promise<AuthResult> {
     const { data, ok, error } = await authApi.login(body)
     if (!ok || !data) return { ok: false, error }
 
@@ -71,7 +71,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /** 註冊。只建立帳號、不發 token（後端刻意分成兩支端點），呼叫端要接著登入一次。 */
-  async function register(body: RegisterDto): Promise<AuthResult> {
+  async function register(body: RegisterBody): Promise<AuthResult> {
     const { ok, error } = await authApi.register(body)
     return { ok, error }
   }

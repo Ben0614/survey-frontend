@@ -1,4 +1,4 @@
-import type { UserEntity } from '~/api/auth'
+import type { User } from '~/api/auth'
 
 /**
  * 「這份問卷我能不能管」的唯一一份前端判準。
@@ -31,7 +31,7 @@ import type { UserEntity } from '~/api/auth'
  * 是讓「寫第二份」變得沒有理由 —— 放在 `app/utils/` 就是全站自動 import。
  *
  * 純函式（而不是讀 store 的 composable）還多一個好處：呼叫端必須把 `user`
- * 遞進來，於是「user 還沒載入」這件事在型別上就看得到（`UserEntity | null`），
+ * 遞進來，於是「user 還沒載入」這件事在型別上就看得到（`User | null`），
  * 而不是藏在 store 內部變成一次安靜的 `undefined`。
  *
  * ## 兩件不會因為抽出來而改變的事
@@ -48,7 +48,7 @@ import type { UserEntity } from '~/api/auth'
  */
 export function canManageSurvey(
   ownerId: string | null,
-  user: UserEntity | null,
+  user: User | null,
 ): boolean {
   return isMySurvey(ownerId, user) || user?.role === 'ADMIN'
 }
@@ -59,7 +59,7 @@ export function canManageSurvey(
  * ⚠️ **不能只寫 `ownerId === user?.id`。** 兩邊都有 null/undefined：
  * `ownerId` 在 Ch10 之前建的資料是 `null`，`user` 在還沒載入時是 `null`。
  * `null === undefined` 恰好是 `false`，所以那個寫法**現在的行為是對的** ——
- * 但它靠的是巧合，而且一旦哪天 user 變成 `{} as UserEntity` 之類的東西就會破。
+ * 但它靠的是巧合，而且一旦哪天 user 變成 `{} as User` 之類的東西就會破。
  * 寫清楚比依賴巧合好。
  *
  * 後端沒有對應的函式（它的 `canManageSurvey` 把這一半內嵌了），
@@ -67,7 +67,7 @@ export function canManageSurvey(
  */
 export function isMySurvey(
   ownerId: string | null,
-  user: UserEntity | null,
+  user: User | null,
 ): boolean {
   return ownerId !== null && user !== null && ownerId === user.id
 }
