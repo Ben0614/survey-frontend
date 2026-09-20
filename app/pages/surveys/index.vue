@@ -65,6 +65,11 @@ const TABS: { key: TabKey; label: string }[] = [
 const tab = ref<TabKey>('all')
 const page = ref(1)
 const pageSize = ref(10)
+
+// 頭帶副標：「全部 · 12 份」。數字是**目前分頁**的筆數，所以分頁名要跟它並排 ——
+// 原本只寫「12 份問卷」，切到「可以填的」時讀者分不出是自己有 12 份還是可以填的有 12 份。
+// 分頁名從 TABS 取，不另外寫一份文案。
+const tabLabel = computed(() => TABS.find((t) => t.key === tab.value)?.label ?? '')
 // ⚠️ **型別是 `string | null`，不是 `string`。**
 //
 // `v-text-field` 的 `clearable` 叉叉會把 model 設成 **null**（不是空字串），
@@ -224,10 +229,8 @@ async function remove() {
 
 <template>
   <AppShell
-    title="我的問卷"
-    :subtitle="
-      meta ? `${meta.total} 份問卷` : '　'
-    "
+    title="問卷列表"
+    :subtitle="meta ? `${tabLabel} · ${meta.total} 份` : '　'"
   >
     <template #actions>
       <!--
