@@ -4,7 +4,7 @@ import type { User } from '~/api/auth'
  * 「這份問卷我能不能管」的唯一一份前端判準。
  *
  * ⚠️ **它必須跟後端的 `canManageSurvey` 一致，而沒有任何工具會在它們不一致時叫。**
- * （`../survey-backend/src/surveys/survey.rules.ts:116`）
+ * （`../survey-backend/src/surveys/survey.rules.ts` 的 `canManageSurvey`；行號會漂，用函式名找）
  *
  * ```ts
  * // 後端

@@ -1549,7 +1549,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponseEntity"];
                 };
             };
-            /** @description 問卷不存在 */
+            /** @description 問卷不存在，或那是別人的草稿 */
             404: {
                 headers: {
                     [name: string]: unknown;

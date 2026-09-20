@@ -17,8 +17,8 @@ useHead({ title: '問卷列表' })
  *
  * 四種分類全部走同一支端點，只是參數不同（後端 Ch15 定的規則）：
  *
- *   全部（我看得到的）  無參數        → PUBLISHED 的 ∪ 我的
- *   我建立的            mine=true
+ *   全部（我看得到的）  無參數        → PUBLISHED 的 ∪ 我的；ADMIN 是全站（含別人的草稿，2026-09-20 起）
+ *   我建立的            mine=true     → ADMIN 也只回自己建的，不是「我能管的」
  *   我的草稿            mine + DRAFT
  *   可以填的            status=PUBLISHED
  *

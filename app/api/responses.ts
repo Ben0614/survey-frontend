@@ -51,6 +51,10 @@ export const responsesApi = {
    * 所以回應**沒有 `fields`**，`toFieldErrors` 對它們是空的。
    * 前端只拿得到一句 message，由 useMyService 跳成 toast。
    * 正常不會走到那裡：這一頁用 radio + 必填，三種情況都在送出前就擋住了。
+   *
+   * 別人的草稿是 **404**（不是 409）—— 跟 `GET /surveys/:id` 一致，看不到就當它不存在
+   *（後端 2026-09-20 補的；在那之前這裡會回 409「問卷未發布」）。
+   * 填寫頁先 GET 再顯示送出鈕，所以畫面上到不了這條路。
    */
   submit: (surveyId: string, answers: Answer[]) =>
     useMyService.post<Response>(`/surveys/${surveyId}/responses`, { answers }),
