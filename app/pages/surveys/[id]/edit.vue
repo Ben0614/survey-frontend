@@ -238,7 +238,7 @@ async function togglePublish() {
       401 已經被 useMyService 清 session 並導去登入頁了。
     -->
     <v-alert v-else-if="!data" type="error">
-      找不到這份問卷，或你沒有權限編輯它。
+      找不到這份問卷
     </v-alert>
 
     <v-form v-else ref="formRef">
