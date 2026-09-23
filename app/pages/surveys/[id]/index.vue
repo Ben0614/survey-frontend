@@ -148,7 +148,7 @@ async function remove() {
     <v-progress-linear v-if="loading" indeterminate color="primary" rounded />
 
     <v-alert v-else-if="!data" type="error">
-      找不到這份問卷 —— 它不存在，或者它還是別人的草稿。
+      找不到這份問卷。
     </v-alert>
 
     <template v-else>
